@@ -2,9 +2,12 @@
   "name": "projector",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "jest",
+    "test:integration": "jest --config jest-integration.config.js"
   },
   "repository": {
     "type": "git",
@@ -12,7 +15,15 @@
   },
   "private": true,
   "dependencies": {
+    "@types/aws-lambda": "^8.10.131",
+    "@types/jest": "^29.5.11",
+    "aws-cdk-lib": "^2.118.0",
+    "constructs": "^10.3.0",
+    "jest": "^29.7.0",
     "prettier": "^3.1.1",
-    "typescript": "^5.3.3"
+    "reflect-metadata": "^0.2.1",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3",
+    "valibot": "^0.25.0"
   }
 }

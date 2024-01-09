@@ -1,41 +1,35 @@
 import * as cdk from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import { CancelOrderIfNotAccepted, EmailOnOrder, GetOrderById, OrderUpdates, PlaceOrder } from './place-order.handler'
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { CommandBus, CommandHandlerFunction, EventBus, RestApi } from '../../src/cdk'
+import { RegisterCustomerHandler } from '../src/register-customer.handler'
+import { QueryHandlerFunction } from '../../src/cdk/handlers/query-handler'
+import { GetCustomerByIdHandler } from '../src/get-customer-by-id.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props)
 
-        // The code that defines your stack goes here
-
-        // example resource
-        // const queue = new sqs.Queue(this, 'AppQueue', {
-        //   visibilityTimeout: cdk.Duration.seconds(300)
-        // });
-
-        // tables / eventbridge / scheduler / api gateways (rest + websocket)
-        new Core({})
-
-        // api endpoints / lambda
-        new CommandHandler(PlaceOrder, {
-            handler: 'src/place-order.handler',
+        const eventBus = new EventBus(this, 'EventBus', {
+            eventBusName: 'EventBus',
         })
 
-        new QueryHandler(GetOrderById, {
-            handler: 'src/get-order-by-id.handler',
+        const commandBus = new CommandBus(this, 'CommandBus', {
+            topicName: 'CommandBus',
         })
 
-        new ChangeHandler(EmailOnOrder, {
-            handler: 'src/email-on-order.handler',
+        const restApi = new RestApi(this, 'RestApi', {
+            apiName: 'RestApi',
         })
 
-        new SubscriptionHandler(OrderUpdates, {
-            handler: 'src/order-updates.handler',
+        new CommandHandlerFunction(this, RegisterCustomerHandler, {
+            restApi,
+            commandBus,
+            entry: 'src/register-customer.handler.ts',
         })
 
-        new ScheduledTaskHandler(CancelOrderIfNotAccepted, {
-            src: 'src/cancel-order-if-no-response.handler',
+        new QueryHandlerFunction(this, GetCustomerByIdHandler, {
+            restApi,
+            entry: 'src/get-customer-by-id.handler.ts',
         })
     }
 }
