@@ -1,11 +1,14 @@
 import { Type } from '../util/type'
 import { AggregateType, getAggregateProps } from './aggregate.decorator'
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb'
+import { TransactWriteItem } from '@aws-sdk/client-dynamodb/dist-types/models/models_0'
 
 class AggregateStore {
     readonly STATE_STORE_NAME = process.env.STATE_STORE_NAME
 
     readonly client = new DynamoDBClient()
+
+    operations: TransactWriteItem[] = []
 
     async load(type: Type, id: string) {
         const props = getAggregateProps(type)
