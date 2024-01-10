@@ -71,10 +71,10 @@ export class AppStack extends cdk.Stack {
             entry: 'src/get-customer-by-id.query-handler.ts',
         })
 
-        // new EventHandler(this, CustomerRegisteredEventHandler, {
-        //     eventBus,
-        //     projectionStores: [customerProjection],
-        //     entry: 'src/customer-registered.event-handler.ts',
-        // })
+        new EventHandler(this, CustomerRegisteredEventHandler, {
+            eventBus,
+            projectionStores: [customerProjection],
+            entry: 'src/customer-registered.event-handler.ts',
+        })
     }
 }

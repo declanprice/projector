@@ -5,7 +5,9 @@ import { Duration } from 'aws-cdk-lib'
 import { ProcessQueue } from './process-queue'
 import { EventBus } from '../event'
 import { Match, Rule } from 'aws-cdk-lib/aws-events'
-import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets'
+import { LambdaFunction, SqsQueue } from 'aws-cdk-lib/aws-events-targets'
+import { Queue } from 'aws-cdk-lib/aws-sqs'
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 
 type ProcessAssociationHandlerProps = {
     eventBus: EventBus
@@ -29,12 +31,18 @@ export class ProcessAssociationHandler extends NodejsFunction {
 
         const { eventBus, processQueue } = props
 
+        const handlerQueue = new Queue(this, `${handler.name}-Associations-Queue`, {
+            queueName: `${handler.name}-Associations-Queue`,
+        })
+
+        this.addEventSource(new SqsEventSource(handlerQueue, { batchSize: 10 }))
+
         new Rule(this, `${handler.name}-AssociationsRule`, {
             eventBus,
             eventPattern: {
                 detailType: Match.anyOf(Match.exactString('RegisterCustomer')),
             },
-            targets: [new LambdaFunction(this)],
+            targets: [new SqsQueue(handlerQueue)],
         })
 
         processQueue.grantSendMessages(this)

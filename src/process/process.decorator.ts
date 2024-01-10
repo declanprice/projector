@@ -3,18 +3,18 @@ import { Type } from '../util/type'
 import { processHandler } from './process.handler'
 import { processAssociationsHandler } from './process-associations.handler'
 
-export type ProcessDecoratorProps = {
+export type ProcessProps = {
     batchSize?: number
     defaultKey?: string
 }
 
-export const Process = (props: ProcessDecoratorProps): ClassDecorator => {
+export const Process = (props: ProcessProps): ClassDecorator => {
     return (constructor: any) => {
         constructor.prototype.processHandler = (event: SQSEvent) => {
             return processHandler(new constructor(), props, event)
         }
 
-        constructor.prototype.processAssociationHandler = (event: EventBridgeEvent<any, any>) => {
+        constructor.prototype.processAssociationHandler = (event: SQSEvent) => {
             return processAssociationsHandler(new constructor(), props, event)
         }
     }

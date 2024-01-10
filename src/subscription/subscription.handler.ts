@@ -1,5 +1,6 @@
 import { SubscriptionHandlerProps } from './subscription-handler.decorator'
 import { APIGatewayProxyEventV2, SQSEvent } from 'aws-lambda'
+import { SNSEvent } from 'aws-lambda/trigger/sns'
 
 export type HandleSubscription = {
     onAdd: () => Promise<any>
@@ -18,7 +19,7 @@ export const removeSubscriptionHandler = async (instance: HandleSubscription, pr
     await instance.onRemove()
 }
 
-export const subscriptionHandler = async (instance: HandleSubscription, props: SubscriptionHandlerProps, event: SQSEvent) => {
+export const subscriptionHandler = async (instance: HandleSubscription, props: SubscriptionHandlerProps, event: SNSEvent) => {
     console.log('subscription handler')
 
     for (const record of event.Records) {

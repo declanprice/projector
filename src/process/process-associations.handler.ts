@@ -1,4 +1,5 @@
-import { ProcessDecoratorProps } from './process.decorator'
-import { EventBridgeEvent } from 'aws-lambda'
+import { ProcessProps } from './process.decorator'
 
-export const processAssociationsHandler = (instance: any, props: ProcessDecoratorProps, event: EventBridgeEvent<any, any>) => {}
+import { SQSEvent } from 'aws-lambda'
+
+export const processAssociationsHandler = (instance: any, props: ProcessProps, event: SQSEvent) => {}

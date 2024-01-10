@@ -2,7 +2,7 @@ import { Duration } from 'aws-cdk-lib'
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Construct } from 'constructs'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
-import { LambdaSubscription, SqsSubscription } from 'aws-cdk-lib/aws-sns-subscriptions'
+import { SqsSubscription } from 'aws-cdk-lib/aws-sns-subscriptions'
 import { SubscriptionFilter } from 'aws-cdk-lib/aws-sns'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
@@ -54,8 +54,14 @@ export class CommandHandler extends NodejsFunction {
         }
 
         if (commandBus) {
+            const handlerQueue = new Queue(this, `${handler.name}-Queue`, {
+                queueName: `${handler.name}-Queue`,
+            })
+
+            this.addEventSource(new SqsEventSource(handlerQueue, { batchSize: 10 }))
+
             commandBus.addSubscription(
-                new LambdaSubscription(this, {
+                new SqsSubscription(handlerQueue, {
                     filterPolicy: {
                         type: SubscriptionFilter.stringFilter({ allowlist: [handler.name] }),
                     },

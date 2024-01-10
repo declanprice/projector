@@ -1,9 +1,10 @@
 import { ObjectSchema, symbol } from 'valibot'
-import { SQSEvent } from 'aws-lambda'
+import { APIGatewayProxyEventV2 } from 'aws-lambda'
 import 'reflect-metadata'
 import { subscriptionHandler } from './subscription.handler'
 import { isHttpEvent } from '../util/is-http-event'
-import { isSqsEvent } from '../util/is-sqs-event'
+import { SNSEvent } from 'aws-lambda/trigger/sns'
+import { isSnsEvent } from '../util/is-sns-event'
 
 const SUBSCRIPTION_HANDLER_METADATA = symbol('SUBSCRIPTION_HANDLER_METADATA')
 
@@ -16,14 +17,14 @@ export const SubscriptionHandler = (props: SubscriptionHandlerProps): ClassDecor
     return (constructor: any) => {
         Reflect.defineMetadata(SUBSCRIPTION_HANDLER_METADATA, props, constructor)
 
-        constructor.prototype.subscriptionHandler = async (event: SQSEvent) => {
+        constructor.prototype.subscriptionHandler = async (event: APIGatewayProxyEventV2 | SNSEvent) => {
             const instance = new constructor()
 
             if (isHttpEvent(event)) {
                 console.log('http event')
             }
 
-            if (isSqsEvent(event)) {
+            if (isSnsEvent(event)) {
                 await subscriptionHandler(instance, props, event)
             }
         }

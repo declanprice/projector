@@ -4,13 +4,15 @@ import { Construct } from 'constructs'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
 import { HandleEvent } from '../../event'
 import { Match, Rule } from 'aws-cdk-lib/aws-events'
-import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets'
+import { LambdaFunction, SqsQueue } from 'aws-cdk-lib/aws-events-targets'
 import { EventBus } from './event-bus'
 import { getEventHandlerProps } from '../../event/event-handler.decorator'
 import { SubscriptionUpdateBus } from '../subscription/subscription-update-bus'
 import { EventStore, StateStore } from '../aggregate'
 import { OutboxStore } from '../outbox'
 import { ProjectionStore } from '../projection'
+import { Queue } from 'aws-cdk-lib/aws-sqs'
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 
 type EventHandlerProps = {
     eventBus: EventBus
@@ -39,12 +41,19 @@ export class EventHandler extends NodejsFunction {
 
         const eventHandlerProps = getEventHandlerProps(handler)
 
+        const handlerQueue = new Queue(this, `${handler.name}-Queue`, {
+            queueName: `${handler.name}-Queue`,
+        })
+
+        this.addEventSource(new SqsEventSource(handlerQueue, { batchSize: 10 }))
+
         new Rule(this, `${handler.name}-Rule`, {
+            ruleName: `${handler.name}-Rule`,
             eventBus,
             eventPattern: {
-                detailType: Match.anyOf(eventHandlerProps.on.map((e) => Match.exactString(e.name))),
+                detailType: Match.anyOf(eventHandlerProps.on.map((e) => e.name)),
             },
-            targets: [new LambdaFunction(this)],
+            targets: [new SqsQueue(handlerQueue)],
         })
 
         if (subscriptionUpdateBus) {
