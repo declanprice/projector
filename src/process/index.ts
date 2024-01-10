@@ -1,2 +1,2 @@
 export { Process, ProcessHandler, StartProcess, EndProcess } from './process.decorator'
-export * from './process.store'
+export * from './process-context.store'

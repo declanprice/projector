@@ -1,13 +1,13 @@
 import { DynamoDBClient, TransactWriteItem } from '@aws-sdk/client-dynamodb'
 
-class OutboxStore {
-    readonly OUTBOX_STORE_NAME = process.env.OUTBOX_STORE_NAME
+class ProcessContextStore {
+    readonly PROCESS_STORE_NAME = process.env.PROCESS_STORE_NAME
 
     readonly client = new DynamoDBClient()
 
-    async command(command: any) {}
+    async end() {}
 
-    commandTx(command: any): TransactWriteItem {
+    endTx(): TransactWriteItem {
         return {
             Update: {
                 TableName: '',
@@ -19,9 +19,9 @@ class OutboxStore {
         }
     }
 
-    async scheduleCommand(command: any, timestamp: Date | string) {}
+    async update() {}
 
-    scheduleCommandTx(command: any, timestamp: Date | string): TransactWriteItem {
+    updateTx(): TransactWriteItem {
         return {
             Update: {
                 TableName: '',
@@ -33,22 +33,9 @@ class OutboxStore {
         }
     }
 
-    async event(command: any) {}
+    async associate() {}
 
-    eventTx(command: any): TransactWriteItem {
-        return {
-            Update: {
-                TableName: '',
-                Key: {},
-                ExpressionAttributeNames: {},
-                ExpressionAttributeValues: {},
-                UpdateExpression: '',
-            },
-        }
-    }
-    async scheduleEvent(event: any, timestamp: Date | string) {}
-
-    scheduleEventTx(event: any, timestamp: Date | string): TransactWriteItem {
+    associateTx(): TransactWriteItem {
         return {
             Update: {
                 TableName: '',
@@ -60,9 +47,9 @@ class OutboxStore {
         }
     }
 
-    async unschedule(id: string) {}
+    async unassociate() {}
 
-    unscheduleTx(id: string): TransactWriteItem {
+    unassociateTx(): TransactWriteItem {
         return {
             Update: {
                 TableName: '',
@@ -75,6 +62,6 @@ class OutboxStore {
     }
 }
 
-const outbox = new OutboxStore()
+const processContext = new ProcessContextStore()
 
-export default outbox
+export default processContext

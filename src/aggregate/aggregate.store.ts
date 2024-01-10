@@ -1,14 +1,12 @@
 import { Type } from '../util/type'
-import { AggregateType, getAggregateProps } from './aggregate.decorator'
-import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb'
-import { TransactWriteItem } from '@aws-sdk/client-dynamodb/dist-types/models/models_0'
+import { AggregateType, getAggregateHandler, getAggregateId, getAggregateProps } from './aggregate.decorator'
+import { DynamoDBClient, GetItemCommand, PutItemCommand, TransactWriteItem } from '@aws-sdk/client-dynamodb'
+import { marshall } from '@aws-sdk/util-dynamodb'
 
 class AggregateStore {
     readonly STATE_STORE_NAME = process.env.STATE_STORE_NAME
 
     readonly client = new DynamoDBClient()
-
-    operations: TransactWriteItem[] = []
 
     async load(type: Type, id: string) {
         const props = getAggregateProps(type)
@@ -24,11 +22,58 @@ class AggregateStore {
         throw new Error('unsupported aggregate type provided')
     }
 
-    async loadMany(type: Type, ids: string[]) {}
+    async apply(instance: any, event: any) {
+        const method = getAggregateHandler(instance, event.constructor.name)
 
-    async apply(instance: any, event: any) {}
+        const idProperty = getAggregateId(instance)
 
-    async archive(instance: any, event: any) {}
+        if (!method) {
+            throw new Error(`${instance.constructor.name} has no @AggregateHandler for event ${event.constructor.name}`)
+        }
+
+        if (!idProperty) {
+            throw new Error(`${instance.constructor.name} has no @AggregateId`)
+        }
+
+        instance[method](event)
+
+        const id = instance[idProperty]
+
+        if (!id) {
+            throw new Error(`id has not been set on ${instance.constructor.name} instance`)
+        }
+
+        await this.client.send(
+            new PutItemCommand({
+                TableName: this.STATE_STORE_NAME,
+                Item: marshall(
+                    {
+                        id,
+                        type: instance.constructor.name,
+                        lastEvent: {
+                            type: event.constructor.name,
+                            data: event,
+                        },
+                        version: 1,
+                        ...instance,
+                    },
+                    { convertClassInstanceToMap: true }
+                ),
+            })
+        )
+    }
+
+    applyTx(type: Type, id: string, event: any): TransactWriteItem {
+        return {
+            Update: {
+                TableName: '',
+                Key: {},
+                ExpressionAttributeNames: {},
+                ExpressionAttributeValues: {},
+                UpdateExpression: '',
+            },
+        }
+    }
 
     private async loadStateStored(type: Type, id: string): Promise<any | null> {
         const result = await this.client.send(

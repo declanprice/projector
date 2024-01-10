@@ -1,9 +1,11 @@
 import { Aggregate, AggregateHandler, AggregateId, AggregateType } from '../../src/aggregate/aggregate.decorator'
 
 export class CustomerRegisteredEvent {
-    customerId: string
-    firstName: string
-    lastName: string
+    constructor(
+        readonly customerId: string,
+        readonly firstName: string,
+        readonly lastName: string
+    ) {}
 }
 
 @Aggregate({

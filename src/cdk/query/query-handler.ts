@@ -15,7 +15,7 @@ type QueryHandlerProps = {
 } & Partial<NodejsFunctionProps>
 
 export class QueryHandler extends NodejsFunction {
-    constructor(scope: Construct, handler: { new (): HandleQuery }, props: QueryHandlerProps) {
+    constructor(scope: Construct, handler: { new (...props: any): HandleQuery }, props: QueryHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
             runtime: Runtime.NODEJS_20_X,

@@ -4,8 +4,10 @@ import { Runtime, StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { Duration } from 'aws-cdk-lib'
 import { StateStore } from './state-store'
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
+import { EventBus } from '../event'
 
 type StateStorePublisherProps = {
+    eventBus: EventBus
     stateStore: StateStore
 } & Partial<NodejsFunction>
 
@@ -18,10 +20,15 @@ export class StateStorePublisher extends NodejsFunction {
             memorySize: 512,
             entry: '../src/cdk/aggregate/state-store-publisher.handler.ts',
             handler: 'stateStorePublisherHandler',
+            environment: {
+                EVENT_BUS_NAME: props.eventBus.eventBusName,
+            },
             ...props,
         })
 
-        const { stateStore } = props
+        const { stateStore, eventBus } = props
+
+        eventBus.grantPutEventsTo(this)
 
         this.addEventSource(new DynamoEventSource(stateStore, { batchSize: 10, startingPosition: StartingPosition.LATEST }))
     }

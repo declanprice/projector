@@ -24,7 +24,7 @@ type EventHandlerProps = {
 } & Partial<NodejsFunctionProps>
 
 export class EventHandler extends NodejsFunction {
-    constructor(scope: Construct, handler: { new (): HandleEvent }, props: EventHandlerProps) {
+    constructor(scope: Construct, handler: { new (...props: any): HandleEvent }, props: EventHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
             runtime: Runtime.NODEJS_20_X,

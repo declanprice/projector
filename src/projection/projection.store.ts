@@ -1,21 +1,46 @@
 import { Type } from 'aws-cdk-lib/assertions/lib/private/type'
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { TransactWriteItem } from '@aws-sdk/client-dynamodb/dist-types/models/models_0'
+import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb'
+import { getAggregateHandler, getAggregateId } from '../aggregate/aggregate.decorator'
+import { marshall } from '@aws-sdk/util-dynamodb'
+import { getProjectionId } from './projection.decorator'
 
 class ProjectionStore {
-    readonly PROJECTION_STORE_NAME = process.env.PROJECTION_STORE_NAME
-
     readonly client = new DynamoDBClient()
 
-    operations: TransactWriteItem[] = []
-
     async get(type: Type, id: string) {}
-    async getMany(type: Type, ids: string[]) {}
+
     async query(type: Type) {}
-    async save(instance: any) {}
-    async saveMany(instances: any[]) {}
+
+    async save(instance: any) {
+        const idProperty = getProjectionId(instance)
+
+        if (!idProperty) {
+            throw new Error(`${instance.constructor.name} has no @AggregateId`)
+        }
+
+        const id = instance[idProperty]
+
+        if (!id) {
+            throw new Error(`id has not been set on ${instance.constructor.name} instance`)
+        }
+
+        await this.client.send(
+            new PutItemCommand({
+                TableName: `${instance.constructor.name}-Store`,
+                Item: marshall(
+                    {
+                        id,
+                        type: instance.constructor.name,
+                        version: 1,
+                        ...instance,
+                    },
+                    { convertClassInstanceToMap: true }
+                ),
+            })
+        )
+    }
+
     async delete(type: Type, id: string) {}
-    async deleteMany(type: Type, ids: string[]) {}
 }
 
 const projection = new ProjectionStore()

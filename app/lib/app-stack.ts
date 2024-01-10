@@ -40,6 +40,7 @@ export class AppStack extends cdk.Stack {
         })
 
         new StateStorePublisher(this, 'StateStorePublisher', {
+            eventBus,
             stateStore,
         })
 

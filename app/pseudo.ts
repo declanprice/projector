@@ -155,7 +155,6 @@
 //         process.data.status = 'placed'
 //         process.associate('123')
 //         process.unassociate('321')
-//         process.deadline('')
 //         process.end()
 //
 //         aggregate.load()
@@ -164,13 +163,13 @@
 //         const deadlineId = outbox.schedule(new DoSomethingEvent(), new Date('04/04/2024 15:00:00'))
 //         outbox.remove(deadlineId)
 //
-//         outbox.command(new DoSomethingCommand())
-//         outbox.event(new SomethingHappenedEvent())
-//         outbox.subscription(new OrderSubscriptionUpdate('data-here'))
-//
-//         bus.command()
-//         bus.event(new DoSomethingEvent())
-//         bus.subscription(new OrderSubscriptionUpdate('data-here'))
+//         outbox.commandTx(new DoSomethingCommand())
+
+// await transaction(
+//   process.endTx(),
+//   outbox.commandTx(new DoSomethingCommand())
+//)
+
 //     }
 //
 //     @ProcessHandler(OrderAcceptedEvent)

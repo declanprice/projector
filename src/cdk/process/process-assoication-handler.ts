@@ -16,7 +16,7 @@ type ProcessAssociationHandlerProps = {
 } & Partial<NodejsFunction>
 
 export class ProcessAssociationHandler extends NodejsFunction {
-    constructor(scope: Construct, handler: { new (): any }, props: ProcessAssociationHandlerProps) {
+    constructor(scope: Construct, handler: { new (...props: any): any }, props: ProcessAssociationHandlerProps) {
         super(scope, `${handler.name}-Associations`, {
             functionName: `${handler.name}-Associations`,
             runtime: Runtime.NODEJS_20_X,

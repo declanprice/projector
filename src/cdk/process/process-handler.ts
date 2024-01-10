@@ -14,7 +14,7 @@ type ProcessHandlerProps = {
 } & Partial<NodejsFunction>
 
 export class ProcessHandler extends NodejsFunction {
-    constructor(scope: Construct, handler: { new (): HandleCommand }, props: ProcessHandlerProps) {
+    constructor(scope: Construct, handler: { new (...props: any): HandleCommand }, props: ProcessHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
             runtime: Runtime.NODEJS_20_X,

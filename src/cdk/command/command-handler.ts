@@ -28,7 +28,7 @@ type CommandHandlerProps = {
 } & Partial<NodejsFunctionProps>
 
 export class CommandHandler extends NodejsFunction {
-    constructor(scope: Construct, handler: { new (): HandleCommand }, props: CommandHandlerProps) {
+    constructor(scope: Construct, handler: { new (...props: any): HandleCommand }, props: CommandHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
             runtime: Runtime.NODEJS_20_X,

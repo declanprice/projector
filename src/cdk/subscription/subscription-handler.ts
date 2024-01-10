@@ -20,7 +20,7 @@ type SubscriptionHandlerProps = {
 } & Partial<NodejsFunction>
 
 export class SubscriptionHandler extends NodejsFunction {
-    constructor(scope: Construct, handler: { new (): HandleSubscription }, props: SubscriptionHandlerProps) {
+    constructor(scope: Construct, handler: { new (...props: any): HandleSubscription }, props: SubscriptionHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
             handler: `index.${handler.name}.prototype.subscriptionHandler`,
