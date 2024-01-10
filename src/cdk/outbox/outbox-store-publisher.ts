@@ -5,7 +5,7 @@ import { Duration } from 'aws-cdk-lib'
 import { OutboxPublisherQueue } from './outbox-publisher-queue'
 import { DynamoEventSource, SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
-import { CommandBus } from '../command-bus'
+import { CommandBus } from '../command/command-bus'
 import { EventBus } from '../event-bus'
 
 type OutboxPublisherProps = {

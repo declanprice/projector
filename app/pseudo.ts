@@ -1,5 +1,3 @@
-// import { scheduler } from 'timers/promises'
-//
 // @Aggregate({
 //     type: AggregateType.STATE_STORED,
 //     snapshotPeriod: 10,
@@ -24,6 +22,11 @@
 //         this.status = 'rejected'
 //     }
 // }
+
+// aggregate.load(Order, '1')
+// aggregate.loadMany(Order, ['1', '2', '3'])
+// aggregate.apply(new Order({ orderId: '1' }), new OrderPlacedEvent())
+// aggregate.archive(new Order({ orderId: '1' }), new OrderRejectedEvent())
 //
 // @Projection({})
 // class OrderProjection {
@@ -33,7 +36,15 @@
 //     items: any[]
 // }
 //
-// @CommandHandlerFunction({
+// projection.get(OrderProjection, '1')
+// projection.getMany(OrderProjection, ['1', '2', '3'])
+// projection.query(OrderProjection).using('index').where('pk', 'something').where('sk', 'something')
+// projection.save(new OrderProjection())
+// projection.saveMany([new OrderProjection()])
+// projection.delete(OrderProjection, '1')
+// projection.deleteMany(OrderProjection, ['1', '2', '3'])
+//
+// @CommandHandler({
 //     path: 'orders/place',
 //     schema: object({}),
 // })
@@ -43,14 +54,10 @@
 //
 //         aggregate.apply(new Order({ orderId: '1' }), new OrderPlacedEvent({ orderId: '1' }))
 //
-//         outbox.event({}, { scheduled: '' })
-//
-//         scheduler.add('new-task', {
-//             data: 'hello',
-//         })
+//         outbox.schedule(new SomethingEvent(), new Date('04/04/04 15:00:05'))
 //     }
 // }
-//
+
 // @QueryHandler({
 //     path: 'orders/{id}',
 //     schema: object({}),

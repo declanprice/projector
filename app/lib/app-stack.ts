@@ -25,9 +25,17 @@ export class AppStack extends cdk.Stack {
             apiName: 'RestApi',
         })
 
-        /** Outbox setup **/
+        const stateStore = new StateStore(this, 'StateStore', {
+            tableName: 'StateStore',
+        })
 
-        const outboxStore = new OutboxStore(this, 'OutboxStore')
+        const eventStore = new EventStore(this, 'EventStore', {
+            tableName: 'EventStore',
+        })
+
+        const outboxStore = new OutboxStore(this, 'OutboxStore', { tableName: 'OutboxStore' })
+
+        /** Outbox setup **/
 
         const outboxPublisherQueue = new OutboxPublisherQueue(this, 'OutboxPublisherQueue')
 
@@ -45,20 +53,18 @@ export class AppStack extends cdk.Stack {
         /** Outbox setup end **/
 
         new StateStorePublisher(this, 'StateStorePublisher', {
-            stateStore: new StateStore(this, 'StateStore', {
-                tableName: 'StateStore',
-            }),
+            stateStore,
         })
 
         new EventStorePublisher(this, 'EventStorePublisher', {
-            eventStore: new EventStore(this, 'EventStore', {
-                tableName: 'EventStore',
-            }),
+            eventStore,
         })
 
         new CommandHandlerFunction(this, RegisterCustomerHandler, {
             restApi,
             commandBus,
+            stateStore,
+            eventStore,
             entry: 'src/register-customer.handler.ts',
         })
 

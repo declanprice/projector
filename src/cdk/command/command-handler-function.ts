@@ -2,7 +2,7 @@ import { Duration } from 'aws-cdk-lib'
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Construct } from 'constructs'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
-import { CommandBus } from '../command-bus'
+import { CommandBus } from './command-bus'
 import { HandleCommand } from '../../command/command.handler'
 import { RestApi } from '../rest-api'
 import { SqsSubscription } from 'aws-cdk-lib/aws-sns-subscriptions'
@@ -12,10 +12,16 @@ import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { getCommandHandlerProps } from '../../command'
 import { HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2'
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'
+import { StateStore } from '../stores/state-store'
+import { EventStore } from '../stores/event-store'
+import { OutboxStore } from '../outbox'
 
 type CommandHandlerProps = {
     restApi?: RestApi
     commandBus?: CommandBus
+    stateStore?: StateStore
+    eventStore?: EventStore
+    outboxStore?: OutboxStore
 } & Partial<NodejsFunctionProps>
 
 export class CommandHandlerFunction extends NodejsFunction {
@@ -32,7 +38,7 @@ export class CommandHandlerFunction extends NodejsFunction {
             ...props,
         })
 
-        const { restApi, commandBus } = props
+        const { restApi, commandBus, stateStore, eventStore, outboxStore } = props
 
         if (restApi) {
             const metadata = getCommandHandlerProps(handler)
@@ -58,6 +64,24 @@ export class CommandHandlerFunction extends NodejsFunction {
                     },
                 })
             )
+        }
+
+        if (stateStore) {
+            stateStore.grantReadWriteData(this)
+
+            this.addEnvironment('STATE_STORE_NAME', stateStore.tableName)
+        }
+
+        if (eventStore) {
+            eventStore.grantReadWriteData(this)
+
+            this.addEnvironment('EVENT_STORE_NAME', eventStore.tableName)
+        }
+
+        if (outboxStore) {
+            outboxStore.grantWriteData(this)
+
+            this.addEnvironment('OUTBOX_STORE_NAME', outboxStore.tableName)
         }
     }
 }

@@ -1,5 +1,7 @@
 import { object, Output, string } from 'valibot'
 import { CommandHandler, HandleCommand } from '../../src/command'
+import aggregate from '../../src/aggregate/aggregate-store'
+import { Order } from './customer.aggregate'
 
 const RegisterCustomerSchema = object({
     firstName: string(),
@@ -12,6 +14,6 @@ const RegisterCustomerSchema = object({
 })
 export class RegisterCustomerHandler implements HandleCommand {
     async handle(command: Output<typeof RegisterCustomerSchema>) {
-        return 'test-success'
+        return await aggregate.load(Order, '1')
     }
 }
