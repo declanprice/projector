@@ -3,3 +3,5 @@ export { EventBus } from './event-bus'
 export { RestApi } from './rest-api'
 
 export { CommandHandlerFunction } from './handlers/command-handler-function'
+
+export * from './outbox'

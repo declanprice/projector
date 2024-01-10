@@ -1,10 +1,10 @@
 import { AttributeType, StreamViewType, Table, TableProps } from 'aws-cdk-lib/aws-dynamodb'
 import { Construct } from 'constructs'
 
-type EventStoreProps = {} & Partial<TableProps>
+type OutboxStoreProps = {} & Partial<TableProps>
 
-export class EventStore extends Table {
-    constructor(scope: Construct, id: string, props: EventStoreProps) {
+export class OutboxStore extends Table {
+    constructor(scope: Construct, id: string, props?: OutboxStoreProps) {
         super(scope, id, {
             tableName: id,
             partitionKey: {
@@ -12,8 +12,8 @@ export class EventStore extends Table {
                 name: 'id',
             },
             sortKey: {
-                type: AttributeType.NUMBER,
-                name: 'version',
+                type: AttributeType.STRING,
+                name: 'timestamp',
             },
             stream: StreamViewType.NEW_IMAGE,
             ...props,

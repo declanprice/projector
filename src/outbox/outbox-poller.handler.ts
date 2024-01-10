@@ -1,1 +1,3 @@
-export const outboxPollerHandler = () => {}
+export const outboxPollerHandler = () => {
+    console.log('outbox poller handler')
+}
