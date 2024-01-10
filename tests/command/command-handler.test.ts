@@ -1,3 +1,3 @@
-describe('CommandHandlerFunction integration tests', () => {
+describe('CommandHandler integration tests', () => {
     it('', () => {})
 })

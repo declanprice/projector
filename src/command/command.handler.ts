@@ -1,7 +1,7 @@
 import { APIGatewayProxyEventV2, SQSEvent } from 'aws-lambda'
-import { isHttpEvent } from '../util/isHttpEvent'
-import { isSqsEvent } from '../util/isSqsEvent'
-import { isSnsMessage } from '../util/isSnsEvent'
+import { isHttpEvent } from '../util/is-http-event'
+import { isSqsEvent } from '../util/is-sqs-event'
+import { isSnsMessage } from '../util/is-sns-event'
 import { commitStoreOperations, flushStoreOperations } from '../util/store-operations'
 
 export type HandleCommand = {
@@ -11,11 +11,15 @@ export type HandleCommand = {
 export const commandHandler = async (classInstance: HandleCommand, event: APIGatewayProxyEventV2 | SQSEvent) => {
     console.log(event)
 
-    if (isHttpEvent(event)) {
+    const invokeHandler = async (command: any) => {
         flushStoreOperations()
-        const result = classInstance.handle(JSON.parse(event.body || '{}'))
+        const result = await classInstance.handle(command)
         await commitStoreOperations()
         return result
+    }
+
+    if (isHttpEvent(event)) {
+        return invokeHandler(JSON.parse(event?.body || '{}'))
     }
 
     if (isSqsEvent(event)) {
@@ -23,9 +27,7 @@ export const commandHandler = async (classInstance: HandleCommand, event: APIGat
             const body = JSON.parse(record.body)
 
             if (isSnsMessage(body)) {
-                flushStoreOperations()
-                await classInstance.handle(JSON.parse(body.Message))
-                await commitStoreOperations()
+                await invokeHandler(JSON.parse(body.Message))
             }
         }
     }

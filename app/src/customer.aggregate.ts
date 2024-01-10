@@ -1,36 +1,25 @@
 import { Aggregate, AggregateHandler, AggregateId, AggregateType } from '../../src/aggregate/aggregate.decorator'
 
-class OrderPlacedEvent {
-    orderId: string
+export class CustomerRegisteredEvent {
     customerId: string
-    items: any[]
-}
-
-class OrderRejectedEvent {
-    orderId: string
+    firstName: string
+    lastName: string
 }
 
 @Aggregate({
     type: AggregateType.STATE_STORED,
     snapshotPeriod: 10,
 })
-export class Order {
+export class Customer {
     @AggregateId()
-    orderId: string
     customerId: string
-    items: any[]
-    status: string
+    firstName: string
+    lastName: string
 
-    @AggregateHandler(OrderPlacedEvent)
-    onOrderPlaced(event: OrderPlacedEvent) {
-        this.orderId = event.orderId
+    @AggregateHandler(CustomerRegisteredEvent)
+    onOrderPlaced(event: CustomerRegisteredEvent) {
         this.customerId = event.customerId
-        this.items = event.items
-        this.status = 'placed'
-    }
-
-    @AggregateHandler(OrderRejectedEvent)
-    onRejected() {
-        this.status = 'rejected'
+        this.firstName = event.firstName
+        this.lastName = event.lastName
     }
 }

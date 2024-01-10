@@ -1,13 +1,22 @@
 import * as cdk from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import { CommandBus, CommandHandlerFunction, EventBus, OutboxPublisherQueue, OutboxStore, OutboxStorePoller, OutboxStorePublisher, RestApi } from '../../src/cdk'
-import { RegisterCustomerHandler } from '../src/register-customer.handler'
-import { QueryHandlerFunction } from '../../src/cdk/handlers/query-handler'
-import { GetCustomerByIdHandler } from '../src/get-customer-by-id.handler'
-import { StateStorePublisher } from '../../src/cdk/publishers/state-store-publisher'
-import { StateStore } from '../../src/cdk/stores/state-store'
-import { EventStorePublisher } from '../../src/cdk/publishers/event-store.publisher'
-import { EventStore } from '../../src/cdk/stores/event-store'
+import {
+    CommandBus,
+    CommandHandler,
+    EventBus,
+    QueryHandler,
+    StateStorePublisher,
+    StateStore,
+    OutboxStore,
+    OutboxStorePublisher,
+    HandlerApi,
+    EventHandler,
+    ProjectionStore,
+} from '../../src/cdk'
+import { RegisterCustomerCommandHandler } from '../src/register-customer.command-handler'
+import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id.query-handler'
+import { CustomerRegisteredEventHandler } from '../src/customer-registered.event-handler'
+import { CustomerProjection } from '../src/customer.projection'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -21,56 +30,51 @@ export class AppStack extends cdk.Stack {
             topicName: 'CommandBus',
         })
 
-        const restApi = new RestApi(this, 'RestApi', {
+        const handlerApi = new HandlerApi(this, 'RestApi', {
             apiName: 'RestApi',
         })
 
+        /** State Store **/
         const stateStore = new StateStore(this, 'StateStore', {
             tableName: 'StateStore',
         })
 
-        const eventStore = new EventStore(this, 'EventStore', {
-            tableName: 'EventStore',
+        new StateStorePublisher(this, 'StateStorePublisher', {
+            stateStore,
         })
 
-        const outboxStore = new OutboxStore(this, 'OutboxStore', { tableName: 'OutboxStore' })
-
-        /** Outbox setup **/
-
-        const outboxPublisherQueue = new OutboxPublisherQueue(this, 'OutboxPublisherQueue')
-
-        new OutboxStorePoller(this, 'OutboxStorePoller', {
-            outboxStore,
-            outboxPublisherQueue,
+        /** Outbox Store **/
+        const outboxStore = new OutboxStore(this, 'OutboxStore', {
+            tableName: 'OutboxStore',
         })
 
         new OutboxStorePublisher(this, 'OutboxStorePublisher', {
             commandBus,
             eventBus,
             outboxStore,
-            outboxPublisherQueue,
-        })
-        /** Outbox setup end **/
-
-        new StateStorePublisher(this, 'StateStorePublisher', {
-            stateStore,
         })
 
-        new EventStorePublisher(this, 'EventStorePublisher', {
-            eventStore,
-        })
+        /** Projection Stores **/
+        const customerProjection = new ProjectionStore(this, CustomerProjection)
 
-        new CommandHandlerFunction(this, RegisterCustomerHandler, {
-            restApi,
+        /** Handlers **/
+        new CommandHandler(this, RegisterCustomerCommandHandler, {
+            handlerApi,
             commandBus,
             stateStore,
-            eventStore,
-            entry: 'src/register-customer.handler.ts',
+            entry: 'src/register-customer.command-handler.ts',
         })
 
-        new QueryHandlerFunction(this, GetCustomerByIdHandler, {
-            restApi,
-            entry: 'src/get-customer-by-id.handler.ts',
+        new QueryHandler(this, GetCustomerByIdQueryHandler, {
+            handlerApi,
+            projectionStores: [customerProjection],
+            entry: 'src/get-customer-by-id.query-handler.ts',
         })
+
+        // new EventHandler(this, CustomerRegisteredEventHandler, {
+        //     eventBus,
+        //     projectionStores: [customerProjection],
+        //     entry: 'src/customer-registered.event-handler.ts',
+        // })
     }
 }

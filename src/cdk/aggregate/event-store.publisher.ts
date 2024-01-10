@@ -1,5 +1,5 @@
 import { Construct } from 'constructs'
-import { EventStore } from '../stores/event-store'
+import { EventStore } from './event-store'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Runtime, StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { Duration } from 'aws-cdk-lib'
@@ -16,7 +16,7 @@ export class EventStorePublisher extends NodejsFunction {
             runtime: Runtime.NODEJS_20_X,
             timeout: Duration.seconds(10),
             memorySize: 512,
-            entry: '../src/aggregate/event-store/event-store-publisher.handler.ts',
+            entry: '../src/cdk/aggregate/event-store-publisher.handler.ts',
             handler: 'eventStorePublisherHandler',
             ...props,
         })

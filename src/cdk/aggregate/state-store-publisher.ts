@@ -2,7 +2,7 @@ import { Construct } from 'constructs'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Runtime, StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { Duration } from 'aws-cdk-lib'
-import { StateStore } from '../stores/state-store'
+import { StateStore } from './state-store'
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 
 type StateStorePublisherProps = {
@@ -16,7 +16,7 @@ export class StateStorePublisher extends NodejsFunction {
             runtime: Runtime.NODEJS_20_X,
             timeout: Duration.seconds(10),
             memorySize: 512,
-            entry: '../src/aggregate/state-store/state-store-publisher.handler.ts',
+            entry: '../src/cdk/aggregate/state-store-publisher.handler.ts',
             handler: 'stateStorePublisherHandler',
             ...props,
         })

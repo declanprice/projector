@@ -5,13 +5,16 @@ import { Runtime } from 'aws-cdk-lib/aws-lambda'
 import { HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2'
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'
 import { getQueryHandlerProps, HandleQuery } from '../../query'
-import { RestApi } from '../rest-api'
+import { HandlerApi } from '../handler-api'
+import { ProjectionStore } from '../projection'
 
 type QueryHandlerProps = {
-    restApi?: RestApi
+    handlerApi?: HandlerApi
+    projectionStores?: ProjectionStore[]
+    entry: string
 } & Partial<NodejsFunctionProps>
 
-export class QueryHandlerFunction extends NodejsFunction {
+export class QueryHandler extends NodejsFunction {
     constructor(scope: Construct, handler: { new (): HandleQuery }, props: QueryHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
@@ -25,16 +28,22 @@ export class QueryHandlerFunction extends NodejsFunction {
             ...props,
         })
 
-        const { restApi } = props
+        const { handlerApi, projectionStores } = props
 
-        if (restApi) {
+        if (handlerApi) {
             const metadata = getQueryHandlerProps(handler)
 
-            restApi.addRoutes({
+            handlerApi.addRoutes({
                 path: metadata.path,
                 methods: [metadata?.method === 'POST' ? HttpMethod.POST : HttpMethod.GET],
                 integration: new HttpLambdaIntegration(`${handler.name}-HttpIntegration`, this),
             })
+        }
+
+        if (projectionStores) {
+            for (const projectionStore of projectionStores) {
+                projectionStore.grantReadWriteData(this)
+            }
         }
     }
 }

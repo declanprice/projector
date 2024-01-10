@@ -8,13 +8,13 @@ class OutboxStore {
 
     operations: TransactWriteItem[] = []
 
-    async removeCommand(id: string) {}
     async command(command: any) {}
-    async unScheduleCommand(id: string) {}
+    async scheduleCommand(command: any, timestamp: Date | string) {}
+    async unscheduleCommand(id: string) {}
 
     async event(command: any) {}
     async scheduleEvent(command: any, timestamp: Date | string) {}
-    async unScheduleEvent(id: string) {}
+    async unscheduleEvent(id: string) {}
 }
 
 const outbox = new OutboxStore()

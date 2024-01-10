@@ -3,6 +3,8 @@ import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-node
 import { Duration } from 'aws-cdk-lib'
 import { OutboxStore } from './outbox-store'
 import { OutboxPublisherQueue } from './outbox-publisher-queue'
+import { Rule, Schedule } from 'aws-cdk-lib/aws-events'
+import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets'
 
 type OutboxStorePollerProps = {
     outboxStore: OutboxStore
@@ -15,7 +17,7 @@ export class OutboxStorePoller extends NodejsFunction {
             functionName: id,
             timeout: Duration.seconds(10),
             memorySize: 512,
-            entry: '../src/outbox/outbox-poller.handler.ts',
+            entry: '../src/cdk/outbox/outbox-poller.handler.ts',
             handler: 'outboxPollerHandler',
             environment: {
                 OUTBOX_PUBLISHER_QUEUE_URL: props.outboxPublisherQueue.queueUrl,
@@ -26,5 +28,11 @@ export class OutboxStorePoller extends NodejsFunction {
         const { outboxPublisherQueue } = props
 
         outboxPublisherQueue.grantSendMessages(this)
+
+        new Rule(this, `${id}-MinuteCron`, {
+            ruleName: `${id}-MinuteCron`,
+            schedule: Schedule.rate(Duration.minutes(1)),
+            targets: [new LambdaFunction(this)],
+        })
     }
 }

@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, SQSEvent } from 'aws-lambda'
 import { QueryHandlerDecoratorProps } from './query-handler.decorator'
-import { isHttpEvent } from '../util/isHttpEvent'
+import { isHttpEvent } from '../util/is-http-event'
 
 export type HandleQuery = {
     handle: (params: any, query?: any) => Promise<any>

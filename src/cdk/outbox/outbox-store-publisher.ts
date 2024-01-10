@@ -5,14 +5,14 @@ import { Duration } from 'aws-cdk-lib'
 import { OutboxPublisherQueue } from './outbox-publisher-queue'
 import { DynamoEventSource, SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
-import { CommandBus } from '../command/command-bus'
-import { EventBus } from '../event-bus'
+import { CommandBus } from '../command'
+import { EventBus } from '../event'
+import { OutboxStorePoller } from './outbox-store-poller'
 
 type OutboxPublisherProps = {
     commandBus: CommandBus
     eventBus: EventBus
     outboxStore: OutboxStore
-    outboxPublisherQueue?: OutboxPublisherQueue
 } & Partial<NodejsFunctionProps>
 
 export class OutboxStorePublisher extends NodejsFunction {
@@ -21,7 +21,7 @@ export class OutboxStorePublisher extends NodejsFunction {
             functionName: id,
             timeout: Duration.seconds(10),
             memorySize: 512,
-            entry: '../src/outbox/outbox-publisher.handler.ts',
+            entry: '../src/cdk/outbox/outbox-publisher.handler.ts',
             handler: 'outboxPublisherHandler',
             environment: {
                 COMMAND_BUS_ARN: props.commandBus.topicArn,
@@ -31,15 +31,11 @@ export class OutboxStorePublisher extends NodejsFunction {
             ...props,
         })
 
-        const { outboxPublisherQueue, outboxStore, commandBus, eventBus } = props
+        const { outboxStore, commandBus, eventBus } = props
 
         commandBus.grantPublish(this)
 
         eventBus.grantPutEventsTo(this)
-
-        if (outboxPublisherQueue) {
-            this.addEventSource(new SqsEventSource(outboxPublisherQueue, { batchSize: 10 }))
-        }
 
         this.addEventSource(
             new DynamoEventSource(outboxStore, {
@@ -47,5 +43,14 @@ export class OutboxStorePublisher extends NodejsFunction {
                 startingPosition: StartingPosition.LATEST,
             })
         )
+
+        const outboxPublisherQueue = new OutboxPublisherQueue(this, `${id}-Queue`)
+
+        this.addEventSource(new SqsEventSource(outboxPublisherQueue, { batchSize: 10 }))
+
+        new OutboxStorePoller(this, `${id}-Poller`, {
+            outboxStore,
+            outboxPublisherQueue,
+        })
     }
 }

@@ -2,29 +2,32 @@ import { Duration } from 'aws-cdk-lib'
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Construct } from 'constructs'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
-import { CommandBus } from './command-bus'
-import { HandleCommand } from '../../command/command.handler'
-import { RestApi } from '../rest-api'
-import { SqsSubscription } from 'aws-cdk-lib/aws-sns-subscriptions'
+import { LambdaSubscription, SqsSubscription } from 'aws-cdk-lib/aws-sns-subscriptions'
 import { SubscriptionFilter } from 'aws-cdk-lib/aws-sns'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
-import { getCommandHandlerProps } from '../../command'
 import { HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2'
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'
-import { StateStore } from '../stores/state-store'
-import { EventStore } from '../stores/event-store'
+import { StateStore, EventStore } from '../aggregate'
 import { OutboxStore } from '../outbox'
+import { SubscriptionUpdateBus } from '../subscription/subscription-update-bus'
+import { HandleCommand, getCommandHandlerProps } from '../../command'
+import { HandlerApi } from '../handler-api'
+import { CommandBus } from './command-bus'
+import { ProjectionStore } from '../projection'
 
 type CommandHandlerProps = {
-    restApi?: RestApi
+    handlerApi?: HandlerApi
     commandBus?: CommandBus
+    subscriptionUpdateBus?: SubscriptionUpdateBus
     stateStore?: StateStore
     eventStore?: EventStore
     outboxStore?: OutboxStore
+    projectionStores?: ProjectionStore[]
+    entry: string
 } & Partial<NodejsFunctionProps>
 
-export class CommandHandlerFunction extends NodejsFunction {
+export class CommandHandler extends NodejsFunction {
     constructor(scope: Construct, handler: { new (): HandleCommand }, props: CommandHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
@@ -38,12 +41,12 @@ export class CommandHandlerFunction extends NodejsFunction {
             ...props,
         })
 
-        const { restApi, commandBus, stateStore, eventStore, outboxStore } = props
+        const { handlerApi, commandBus, subscriptionUpdateBus, stateStore, eventStore, outboxStore, projectionStores } = props
 
-        if (restApi) {
+        if (handlerApi) {
             const metadata = getCommandHandlerProps(handler)
 
-            restApi.addRoutes({
+            handlerApi.addRoutes({
                 path: metadata.path,
                 methods: [metadata?.method === 'PUT' ? HttpMethod.PUT : HttpMethod.POST],
                 integration: new HttpLambdaIntegration(`${handler.name}-HttpIntegration`, this),
@@ -51,14 +54,8 @@ export class CommandHandlerFunction extends NodejsFunction {
         }
 
         if (commandBus) {
-            const handlerQueue = new Queue(this, `${handler.name}-Queue`, {
-                queueName: `${handler.name}-Queue`,
-            })
-
-            this.addEventSource(new SqsEventSource(handlerQueue, { batchSize: 10 }))
-
             commandBus.addSubscription(
-                new SqsSubscription(handlerQueue, {
+                new LambdaSubscription(this, {
                     filterPolicy: {
                         type: SubscriptionFilter.stringFilter({ allowlist: [handler.name] }),
                     },
@@ -66,22 +63,30 @@ export class CommandHandlerFunction extends NodejsFunction {
             )
         }
 
+        if (subscriptionUpdateBus) {
+            subscriptionUpdateBus.grantPublish(this)
+            this.addEnvironment('SUBSCRIPTION_BUS_ARN', subscriptionUpdateBus.topicArn)
+        }
+
         if (stateStore) {
             stateStore.grantReadWriteData(this)
-
             this.addEnvironment('STATE_STORE_NAME', stateStore.tableName)
         }
 
         if (eventStore) {
             eventStore.grantReadWriteData(this)
-
             this.addEnvironment('EVENT_STORE_NAME', eventStore.tableName)
         }
 
         if (outboxStore) {
             outboxStore.grantWriteData(this)
-
             this.addEnvironment('OUTBOX_STORE_NAME', outboxStore.tableName)
+        }
+
+        if (projectionStores) {
+            for (const projectionStore of projectionStores) {
+                projectionStore.grantReadWriteData(this)
+            }
         }
     }
 }

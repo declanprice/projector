@@ -1,8 +1,8 @@
-import aggregate from '../aggregate/aggregate-store'
+import aggregate from '../aggregate/aggregate.store'
 import { DynamoDBClient, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb'
-import outbox from '../outbox/outbox-store'
-import processContext from '../process/process-store'
-import projection from '../projection/projection-store'
+import outbox from '../outbox/outbox.store'
+import processContext from '../process/process.store'
+import projection from '../projection/projection.store'
 const client = new DynamoDBClient()
 
 export const flushStoreOperations = () => {

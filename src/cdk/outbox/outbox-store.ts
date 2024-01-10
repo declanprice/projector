@@ -11,12 +11,20 @@ export class OutboxStore extends Table {
                 type: AttributeType.STRING,
                 name: 'id',
             },
-            sortKey: {
-                type: AttributeType.STRING,
-                name: 'timestamp',
-            },
             stream: StreamViewType.NEW_IMAGE,
             ...props,
+        })
+
+        this.addGlobalSecondaryIndex({
+            indexName: 'status-index',
+            partitionKey: {
+                name: 'status',
+                type: AttributeType.STRING,
+            },
+            sortKey: {
+                name: 'timestamp',
+                type: AttributeType.STRING,
+            },
         })
     }
 }

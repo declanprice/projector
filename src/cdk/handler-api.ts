@@ -3,7 +3,7 @@ import { Construct } from 'constructs'
 
 type RestApiProps = {} & HttpApiProps
 
-export class RestApi extends HttpApi {
+export class HandlerApi extends HttpApi {
     constructor(scope: Construct, id: string, props: RestApiProps) {
         super(scope, id, props)
     }

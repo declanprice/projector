@@ -1,6 +1,7 @@
 import { Type } from '../util/type'
 import { symbol } from 'valibot'
 import 'reflect-metadata'
+
 const AGGREGATE_METADATA = symbol('AGGREGATE_METADATA')
 
 export enum AggregateType {

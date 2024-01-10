@@ -18,7 +18,7 @@ class TestHandler implements HandleCommand {
     handle = mockHandle
 }
 
-describe('CommandHandlerFunction decorator', () => {
+describe('CommandHandler decorator', () => {
     let httpEvent: APIGatewayProxyEventV2
     let sqsEvent: SQSEvent
 
