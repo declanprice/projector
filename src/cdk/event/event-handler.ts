@@ -2,11 +2,10 @@ import { Duration } from 'aws-cdk-lib'
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Construct } from 'constructs'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
-import { HandleEvent } from '../../event'
 import { Match, Rule } from 'aws-cdk-lib/aws-events'
-import { LambdaFunction, SqsQueue } from 'aws-cdk-lib/aws-events-targets'
+import { SqsQueue } from 'aws-cdk-lib/aws-events-targets'
 import { EventBus } from './event-bus'
-import { getEventHandlerProps } from '../../event/event-handler.decorator'
+import { getEventNames } from '../../event/event-handler.decorator'
 import { SubscriptionUpdateBus } from '../subscription/subscription-update-bus'
 import { EventStore, StateStore } from '../aggregate'
 import { OutboxStore } from '../outbox'
@@ -24,7 +23,7 @@ type EventHandlerProps = {
 } & Partial<NodejsFunctionProps>
 
 export class EventHandler extends NodejsFunction {
-    constructor(scope: Construct, handler: { new (...props: any): HandleEvent }, props: EventHandlerProps) {
+    constructor(scope: Construct, handler: { new (...props: any): any }, props: EventHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
             runtime: Runtime.NODEJS_20_X,
@@ -39,8 +38,6 @@ export class EventHandler extends NodejsFunction {
 
         const { eventBus, stateStore, eventStore, outboxStore, projectionStores, subscriptionUpdateBus } = props
 
-        const eventHandlerProps = getEventHandlerProps(handler)
-
         const handlerQueue = new Queue(this, `${handler.name}-Queue`, {
             queueName: `${handler.name}-Queue`,
         })
@@ -51,7 +48,7 @@ export class EventHandler extends NodejsFunction {
             ruleName: `${handler.name}-Rule`,
             eventBus,
             eventPattern: {
-                detailType: Match.anyOf(eventHandlerProps.on.map((e) => e.name)),
+                detailType: Match.anyOf(getEventNames(handler)),
             },
             targets: [new SqsQueue(handlerQueue)],
         })

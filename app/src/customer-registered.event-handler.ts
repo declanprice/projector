@@ -1,26 +1,14 @@
-import { EventHandler, HandleEvent } from '../../src/event'
+import { EventHandlerGroup } from '../../src/event'
 import { Customer, CustomerRegisteredEvent } from './customer.aggregate'
-import { AggregateItem } from '../../src/aggregate/aggregate.item'
 import projection from '../../src/projection/projection.store'
 import { CustomerProjection } from './customer.projection'
+import { EventHandler } from '../../src/event/event-handler.decorator'
 
-@EventHandler({
-    on: [CustomerRegisteredEvent],
+@EventHandlerGroup({
+    batchSize: 10,
 })
-export class CustomerRegisteredEventHandler implements HandleEvent {
-    async handle(type: string, event: CustomerRegisteredEvent, data: Customer) {
-        console.log('handling customer registered event', event)
-
-        switch (type) {
-            case CustomerRegisteredEvent.name:
-                await this.handleRegistered(event, data)
-                break
-            default:
-                console.log('unsupported event type')
-                break
-        }
-    }
-
+export class CustomerRegisteredEventHandler {
+    @EventHandler(CustomerRegisteredEvent)
     async handleRegistered(event: CustomerRegisteredEvent, data: Customer) {
         await projection.save(new CustomerProjection(data))
     }

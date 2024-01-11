@@ -1,2 +1,1 @@
-export { EventHandler } from './event-handler.decorator'
-export { HandleEvent } from './event.handler'
+export { EventHandlerGroup } from './event-handler.decorator'
