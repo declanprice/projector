@@ -1,1 +1,1 @@
-export type Type = { new (...args: any): any }
+export type Type<E = {}> = { new (...args: any): E }
