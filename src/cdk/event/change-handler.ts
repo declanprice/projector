@@ -49,12 +49,14 @@ export class ChangeHandler extends NodejsFunction {
             eventBus,
             eventPattern: {
                 detailType: Match.exactString('CHANGE_EVENT'),
-                detail: [
-                    getChangeTypes(handler).map((type) => ({
-                        type: Match.exactString(type.type),
-                        change: Match.exactString(type.change),
-                    })),
-                ],
+                detail: {
+                    $or: Match.anyOf(
+                        getChangeTypes(handler).map((type) => ({
+                            type: Match.exactString(type.type),
+                            change: Match.exactString(type.change),
+                        }))
+                    ),
+                },
             },
             targets: [new SqsQueue(handlerQueue)],
         })

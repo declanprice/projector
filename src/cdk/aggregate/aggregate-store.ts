@@ -15,7 +15,7 @@ export class AggregateStore extends Table {
                 type: AttributeType.STRING,
                 name: 'type',
             },
-            stream: StreamViewType.NEW_IMAGE,
+            stream: StreamViewType.NEW_AND_OLD_IMAGES,
             ...props,
         })
     }

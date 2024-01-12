@@ -30,7 +30,7 @@ export const getChangeHandlerGroupProps = (target: any): ChangeHandlerGroupProps
 
 export const ChangeHandler = (type: Type, change: ChangeType): MethodDecorator => {
     return (target: any, propertyKey: string | symbol) => {
-        Reflect.defineMetadata(`${type}-${change}`, propertyKey, target.constructor)
+        Reflect.defineMetadata(`${type.name}-${change}`, propertyKey, target.constructor)
 
         const changeTypes = getChangeTypes(target.constructor)
 

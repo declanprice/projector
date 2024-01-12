@@ -10,7 +10,7 @@ export const changeHandler = async (instance: any, props: ChangeHandlerGroupProp
 
         const { detail } = body
 
-        const method = getChangeHandlerMethod(instance.constructor, body.detail.type, body.detail.change)
+        const method = getChangeHandlerMethod(instance.constructor, detail.type, detail.change)
 
         if (!method) {
             throw new Error(

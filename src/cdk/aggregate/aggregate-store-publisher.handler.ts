@@ -8,6 +8,8 @@ import { ChangeEvent, ChangeType } from '../../event'
 const client = new EventBridgeClient()
 
 export const aggregateStorePublisherHandler = async (event: DynamoDBStreamEvent) => {
+    console.log(event)
+
     const EVENT_BUS_NAME = process.env.EVENT_BUS_NAME
 
     const changeEventsToPut: PutEventsRequestEntry[] = []
@@ -25,7 +27,10 @@ export const aggregateStorePublisherHandler = async (event: DynamoDBStreamEvent)
             image = record.dynamodb?.OldImage!
         }
 
-        if (!record.dynamodb?.NewImage) continue
+        if (!image) {
+            console.log('no image available')
+            continue
+        }
 
         const data = unmarshall(image as any) as AggregateItem<any>
 

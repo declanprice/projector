@@ -16,7 +16,7 @@ export class ProjectionStore extends Table {
                 name: 'type',
             },
             ...props,
-            tableName: `${projection.name}-Store`,
+            tableName: `${projection.name}Store`,
         })
     }
 }

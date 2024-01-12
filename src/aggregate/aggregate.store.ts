@@ -1,8 +1,8 @@
 import { Type } from '../util/type'
-import { getAggregateHandler, getAggregateId } from './aggregate.decorator'
+import { getAggregateId } from './aggregate.decorator'
 import { DynamoDBClient, GetItemCommand, PutItemCommand, TransactWriteItem } from '@aws-sdk/client-dynamodb'
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
-import { getProjectionId } from '../projection/projection.decorator'
+import { AggregateItem } from './aggregate.item'
 
 class AggregateStore {
     readonly AGGREGATE_STORE_NAME = process.env.AGGREGATE_STORE_NAME
@@ -38,7 +38,7 @@ class AggregateStore {
     }
 
     saveTx(instance: any): TransactWriteItem {
-        const idProperty = getProjectionId(instance)
+        const idProperty = getAggregateId(instance)
 
         if (!idProperty) {
             throw new Error(`${instance.constructor.name} has no @AggregateId`)
@@ -50,18 +50,18 @@ class AggregateStore {
             throw new Error(`id has not been set on ${instance.constructor.name} instance`)
         }
 
+        const item: AggregateItem<any> = {
+            id,
+            type: instance.constructor.name,
+            data: instance,
+            timestamp: new Date().toISOString(),
+            version: 1,
+        }
+
         return {
             Put: {
-                TableName: `${instance.constructor.name}-Store`,
-                Item: marshall(
-                    {
-                        id,
-                        type: instance.constructor.name,
-                        version: 1,
-                        ...instance,
-                    },
-                    { convertClassInstanceToMap: true }
-                ),
+                TableName: this.AGGREGATE_STORE_NAME,
+                Item: marshall(item, { convertClassInstanceToMap: true }),
             },
         }
     }
