@@ -1,4 +1,4 @@
-import { Duration } from 'aws-cdk-lib'
+import { aws_timestream, Duration } from 'aws-cdk-lib'
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Construct } from 'constructs'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
@@ -14,7 +14,7 @@ import { Queue } from 'aws-cdk-lib/aws-sqs'
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { getChangeTypes } from '../../event/change-handler.decorator'
 
-type EventHandlerProps = {
+type ChangeHandlerProps = {
     eventBus: EventBus
     aggregateStore?: AggregateStore
     outboxStore?: OutboxStore
@@ -22,12 +22,12 @@ type EventHandlerProps = {
     subscriptionUpdateBus?: SubscriptionUpdateBus
 } & Partial<NodejsFunctionProps>
 
-export class EventHandler extends NodejsFunction {
-    constructor(scope: Construct, handler: { new (...props: any): any }, props: EventHandlerProps) {
+export class ChangeHandler extends NodejsFunction {
+    constructor(scope: Construct, handler: { new (...props: any): any }, props: ChangeHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
             runtime: Runtime.NODEJS_20_X,
-            handler: `index.${handler.name}.prototype.eventHandler`,
+            handler: `index.${handler.name}.prototype.changeHandler`,
             timeout: Duration.seconds(10),
             memorySize: 512,
             bundling: {
@@ -48,12 +48,13 @@ export class EventHandler extends NodejsFunction {
             ruleName: `${handler.name}-Rule`,
             eventBus,
             eventPattern: {
-                detailType: Match.exactString('BUS_EVENT'),
-                detail: Match.anyOf(
-                    getEventNames(handler).map((type) => ({
-                        type,
-                    }))
-                ),
+                detailType: Match.exactString('CHANGE_EVENT'),
+                detail: [
+                    getChangeTypes(handler).map((type) => ({
+                        type: Match.exactString(type.type),
+                        change: Match.exactString(type.change),
+                    })),
+                ],
             },
             targets: [new SqsQueue(handlerQueue)],
         })

@@ -1,84 +1,18 @@
 import { Type } from '../util/type'
-import { AggregateType, getAggregateHandler, getAggregateId, getAggregateProps } from './aggregate.decorator'
+import { getAggregateHandler, getAggregateId } from './aggregate.decorator'
 import { DynamoDBClient, GetItemCommand, PutItemCommand, TransactWriteItem } from '@aws-sdk/client-dynamodb'
-import { marshall } from '@aws-sdk/util-dynamodb'
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
+import { getProjectionId } from '../projection/projection.decorator'
 
 class AggregateStore {
-    readonly STATE_STORE_NAME = process.env.STATE_STORE_NAME
+    readonly AGGREGATE_STORE_NAME = process.env.AGGREGATE_STORE_NAME
 
     readonly client = new DynamoDBClient()
 
-    async load(type: Type, id: string) {
-        const props = getAggregateProps(type)
-
-        if (props.type === AggregateType.STATE_STORED) {
-            return this.loadStateStored(type, id)
-        }
-
-        if (props.type === AggregateType.EVENT_STORED) {
-            return this.loadEventStored(type, id)
-        }
-
-        throw new Error('unsupported aggregate type provided')
-    }
-
-    async apply(instance: any, event: any) {
-        const method = getAggregateHandler(instance, event.constructor.name)
-
-        const idProperty = getAggregateId(instance)
-
-        if (!method) {
-            throw new Error(`${instance.constructor.name} has no @AggregateHandler for event ${event.constructor.name}`)
-        }
-
-        if (!idProperty) {
-            throw new Error(`${instance.constructor.name} has no @AggregateId`)
-        }
-
-        instance[method](event)
-
-        const id = instance[idProperty]
-
-        if (!id) {
-            throw new Error(`id has not been set on ${instance.constructor.name} instance`)
-        }
-
-        await this.client.send(
-            new PutItemCommand({
-                TableName: this.STATE_STORE_NAME,
-                Item: marshall(
-                    {
-                        id,
-                        type: instance.constructor.name,
-                        lastEvent: {
-                            type: event.constructor.name,
-                            data: event,
-                        },
-                        version: 1,
-                        ...instance,
-                    },
-                    { convertClassInstanceToMap: true }
-                ),
-            })
-        )
-    }
-
-    applyTx(type: Type, id: string, event: any): TransactWriteItem {
-        return {
-            Update: {
-                TableName: '',
-                Key: {},
-                ExpressionAttributeNames: {},
-                ExpressionAttributeValues: {},
-                UpdateExpression: '',
-            },
-        }
-    }
-
-    private async loadStateStored(type: Type, id: string): Promise<any | null> {
+    async get<E>(type: Type<E>, id: string): Promise<E | null> {
         const result = await this.client.send(
             new GetItemCommand({
-                TableName: this.STATE_STORE_NAME,
+                TableName: this.AGGREGATE_STORE_NAME,
                 Key: {
                     id: {
                         S: id,
@@ -90,14 +24,47 @@ class AggregateStore {
             })
         )
 
-        console.log('result', result)
-
         if (!result.Item) return null
 
-        return result.Item
+        return unmarshall(result.Item) as E
     }
 
-    private async loadEventStored(type: Type, id: string) {}
+    async save(instance: any) {
+        const tx = this.saveTx(instance)
+
+        if (!tx.Put) throw new Error('failed to save')
+
+        await this.client.send(new PutItemCommand(tx.Put))
+    }
+
+    saveTx(instance: any): TransactWriteItem {
+        const idProperty = getProjectionId(instance)
+
+        if (!idProperty) {
+            throw new Error(`${instance.constructor.name} has no @AggregateId`)
+        }
+
+        const id = instance[idProperty]
+
+        if (!id) {
+            throw new Error(`id has not been set on ${instance.constructor.name} instance`)
+        }
+
+        return {
+            Put: {
+                TableName: `${instance.constructor.name}-Store`,
+                Item: marshall(
+                    {
+                        id,
+                        type: instance.constructor.name,
+                        version: 1,
+                        ...instance,
+                    },
+                    { convertClassInstanceToMap: true }
+                ),
+            },
+        }
+    }
 }
 
 const aggregate = new AggregateStore()

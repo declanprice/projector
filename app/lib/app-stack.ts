@@ -5,18 +5,18 @@ import {
     CommandHandler,
     EventBus,
     QueryHandler,
-    StateStorePublisher,
-    StateStore,
+    AggregateStorePublisher,
+    AggregateStore,
     OutboxStore,
     OutboxStorePublisher,
     HandlerApi,
-    EventHandler,
     ProjectionStore,
+    ChangeHandler,
 } from '../../src/cdk'
 import { RegisterCustomerCommandHandler } from '../src/register-customer.command-handler'
 import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id.query-handler'
-import { CustomerRegisteredEventHandler } from '../src/customer-registered.event-handler'
 import { CustomerProjection } from '../src/customer.projection'
+import { CustomerProjectionChangeHandler } from '../src/customer-projection.change.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -34,14 +34,14 @@ export class AppStack extends cdk.Stack {
             apiName: 'RestApi',
         })
 
-        /** State Store **/
-        const stateStore = new StateStore(this, 'StateStore', {
-            tableName: 'StateStore',
+        /** Aggregate Store **/
+        const aggregateStore = new AggregateStore(this, 'AggregateStore', {
+            tableName: 'AggregateStore',
         })
 
-        new StateStorePublisher(this, 'StateStorePublisher', {
+        new AggregateStorePublisher(this, 'AggregateStorePublisher', {
             eventBus,
-            stateStore,
+            aggregateStore,
         })
 
         /** Outbox Store **/
@@ -62,7 +62,8 @@ export class AppStack extends cdk.Stack {
         new CommandHandler(this, RegisterCustomerCommandHandler, {
             handlerApi,
             commandBus,
-            stateStore,
+            aggregateStore,
+            outboxStore,
             entry: 'src/register-customer.command-handler.ts',
         })
 
@@ -72,10 +73,10 @@ export class AppStack extends cdk.Stack {
             entry: 'src/get-customer-by-id.query-handler.ts',
         })
 
-        new EventHandler(this, CustomerRegisteredEventHandler, {
+        new ChangeHandler(this, CustomerProjectionChangeHandler, {
             eventBus,
             projectionStores: [customerProjection],
-            entry: 'src/customer-registered.event-handler.ts',
+            entry: 'src/customer-projection.change.handler.ts',
         })
     }
 }

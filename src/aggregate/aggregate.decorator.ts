@@ -3,19 +3,12 @@ import { symbol } from 'valibot'
 import 'reflect-metadata'
 
 const AGGREGATE_METADATA = symbol('AGGREGATE_METADATA')
+
 const AGGREGATE_ID_PROPERTY = symbol('AGGREGATE_ID_PROPERTY')
 
-export enum AggregateType {
-    STATE_STORED,
-    EVENT_STORED,
-}
+type AggregateDecoratorProps = {}
 
-type AggregateDecoratorProps = {
-    type: AggregateType
-    snapshotPeriod?: number
-}
-
-export const Aggregate = (props: AggregateDecoratorProps): ClassDecorator => {
+export const Aggregate = (props?: AggregateDecoratorProps): ClassDecorator => {
     return (target: Function) => {
         Reflect.defineMetadata(AGGREGATE_METADATA, props, target)
     }

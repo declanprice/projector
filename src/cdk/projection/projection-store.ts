@@ -6,7 +6,7 @@ type ProjectionStoreProps = {} & Partial<TableProps>
 
 export class ProjectionStore extends Table {
     constructor(scope: Construct, projection: Type, props?: ProjectionStoreProps) {
-        super(scope, `${projection.name}-Store`, {
+        super(scope, `${projection.name}Store`, {
             partitionKey: {
                 type: AttributeType.STRING,
                 name: 'id',

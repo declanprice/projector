@@ -1,17 +1,45 @@
-import { Type } from 'aws-cdk-lib/assertions/lib/private/type'
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb'
-import { getAggregateHandler, getAggregateId } from '../aggregate/aggregate.decorator'
-import { marshall } from '@aws-sdk/util-dynamodb'
+import { DynamoDBClient, GetItemCommand, PutItemCommand, TransactWriteItem } from '@aws-sdk/client-dynamodb'
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import { getProjectionId } from './projection.decorator'
+import { Type } from '../util/type'
+import { ProjectionQueryBuilder } from './projection-query-builder'
 
 class ProjectionStore {
     readonly client = new DynamoDBClient()
 
-    async get(type: Type, id: string) {}
+    async get<E>(type: Type<E>, id: string): Promise<E | null> {
+        const result = await this.client.send(
+            new GetItemCommand({
+                TableName: `${type.name}Store`,
+                Key: {
+                    id: {
+                        S: id,
+                    },
+                    type: {
+                        S: type.name,
+                    },
+                },
+            })
+        )
 
-    async query(type: Type) {}
+        if (!result.Item) return null
+
+        return unmarshall(result.Item) as E
+    }
+
+    query(type: Type) {
+        return new ProjectionQueryBuilder(type, this.client)
+    }
 
     async save(instance: any) {
+        const tx = this.saveTx(instance)
+
+        if (!tx.Put) throw new Error('failed to save')
+
+        await this.client.send(new PutItemCommand(tx.Put))
+    }
+
+    saveTx(instance: any): TransactWriteItem {
         const idProperty = getProjectionId(instance)
 
         if (!idProperty) {
@@ -24,9 +52,9 @@ class ProjectionStore {
             throw new Error(`id has not been set on ${instance.constructor.name} instance`)
         }
 
-        await this.client.send(
-            new PutItemCommand({
-                TableName: `${instance.constructor.name}-Store`,
+        return {
+            Put: {
+                TableName: `${instance.constructor.name}Store`,
                 Item: marshall(
                     {
                         id,
@@ -36,11 +64,9 @@ class ProjectionStore {
                     },
                     { convertClassInstanceToMap: true }
                 ),
-            })
-        )
+            },
+        }
     }
-
-    async delete(type: Type, id: string) {}
 }
 
 const projection = new ProjectionStore()

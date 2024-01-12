@@ -1,11 +1,7 @@
-export type AggregateItem = {
+export type AggregateItem<Data extends any> = {
     id: string
     type: string
     timestamp: string
-    lastEvent: {
-        type: string
-        data: any
-    }
+    data: Data
     version: number
-    [key: string]: any
 }

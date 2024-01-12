@@ -5,6 +5,7 @@ import { symbol } from 'valibot'
 import 'reflect-metadata'
 
 const EVENT_HANDLER_METADATA = symbol('EVENT_HANDLER_METADATA')
+
 const EVENT_NAMES_METADATA = symbol('EVENT_NAMES_METADATA')
 
 export type EventHandlerProps = {

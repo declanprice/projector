@@ -8,7 +8,7 @@ import { Queue } from 'aws-cdk-lib/aws-sqs'
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2'
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'
-import { StateStore, EventStore } from '../aggregate'
+import { AggregateStore } from '../aggregate'
 import { OutboxStore } from '../outbox'
 import { SubscriptionUpdateBus } from '../subscription/subscription-update-bus'
 import { HandleCommand, getCommandHandlerProps } from '../../command'
@@ -20,8 +20,7 @@ type CommandHandlerProps = {
     handlerApi?: HandlerApi
     commandBus?: CommandBus
     subscriptionUpdateBus?: SubscriptionUpdateBus
-    stateStore?: StateStore
-    eventStore?: EventStore
+    aggregateStore?: AggregateStore
     outboxStore?: OutboxStore
     projectionStores?: ProjectionStore[]
     entry: string
@@ -41,7 +40,7 @@ export class CommandHandler extends NodejsFunction {
             ...props,
         })
 
-        const { handlerApi, commandBus, subscriptionUpdateBus, stateStore, eventStore, outboxStore, projectionStores } = props
+        const { handlerApi, commandBus, subscriptionUpdateBus, aggregateStore, outboxStore, projectionStores } = props
 
         if (handlerApi) {
             const metadata = getCommandHandlerProps(handler)
@@ -74,14 +73,9 @@ export class CommandHandler extends NodejsFunction {
             this.addEnvironment('SUBSCRIPTION_BUS_ARN', subscriptionUpdateBus.topicArn)
         }
 
-        if (stateStore) {
-            stateStore.grantReadWriteData(this)
-            this.addEnvironment('STATE_STORE_NAME', stateStore.tableName)
-        }
-
-        if (eventStore) {
-            eventStore.grantReadWriteData(this)
-            this.addEnvironment('EVENT_STORE_NAME', eventStore.tableName)
+        if (aggregateStore) {
+            aggregateStore.grantReadWriteData(this)
+            this.addEnvironment('AGGREGATE_STORE_NAME', aggregateStore.tableName)
         }
 
         if (outboxStore) {
