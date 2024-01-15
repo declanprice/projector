@@ -8,5 +8,6 @@ export type ChangeEvent<Data> = {
     change: ChangeType
     type: string
     data: Data
+    version: number
     timestamp: string
 }

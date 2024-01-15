@@ -28,8 +28,7 @@ export const aggregateStorePublisherHandler = async (event: DynamoDBStreamEvent)
         }
 
         if (!image) {
-            console.log('no image available')
-            continue
+            throw new Error(`[Invalid Record] - neither NewImage or OldImage was available to process. ${record}`)
         }
 
         const data = unmarshall(image as any) as AggregateItem<any>
@@ -38,13 +37,14 @@ export const aggregateStorePublisherHandler = async (event: DynamoDBStreamEvent)
             type: data.type,
             data: data.data,
             timestamp: data.timestamp,
+            version: data.version,
             change: record.eventName as ChangeType,
         }
 
         changeEventsToPut.push({
             EventBusName: EVENT_BUS_NAME,
             DetailType: 'CHANGE_EVENT',
-            Source: record.eventSource || '',
+            Source: record.eventSource ?? 'AGGREGATE_STORE',
             Detail: JSON.stringify(changeEvent),
         })
     }
