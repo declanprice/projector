@@ -1,4 +1,4 @@
-export type BusEvent<Data> = {
+export type EventBusMessage<Data> = {
     type: string
     timestamp: string
     data: Data

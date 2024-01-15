@@ -25,7 +25,6 @@ export class OutboxStorePublisher extends NodejsFunction {
             handler: 'outboxPublisherHandler',
             environment: {
                 COMMAND_BUS_ARN: props.commandBus.topicArn,
-                EVENT_BUS_ARN: props.eventBus.eventBusArn,
                 EVENT_BUS_NAME: props.eventBus.eventBusName,
             },
             ...props,
