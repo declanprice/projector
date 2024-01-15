@@ -3,6 +3,7 @@ import aggregate from '../../src/aggregate/aggregate.store'
 import { Customer } from './customer.aggregate'
 import { CommandHandler, HandleCommand } from '../../src/command'
 import { transaction } from '../../src/util/store-operations'
+import outbox from '../../src/outbox/outbox.store'
 
 export class CustomerRegisteredEvent {
     constructor(
@@ -23,16 +24,14 @@ const RegisterCustomerSchema = object({
 })
 export class RegisterCustomerCommandHandler implements HandleCommand {
     async handle(command: Output<typeof RegisterCustomerSchema>) {
-        const event = new CustomerRegisteredEvent('1', 'declan', 'price')
+        const customer = new Customer({
+            customerId: '1',
+            firstName: 'Declan',
+            lastName: 'Price',
+        })
 
-        await transaction(
-            aggregate.saveTx(
-                new Customer({
-                    customerId: event.customerId,
-                    firstName: event.firstName,
-                    lastName: event.lastName,
-                })
-            )
-        )
+        const event = new CustomerRegisteredEvent(customer.customerId, customer.firstName, customer.lastName)
+
+        await transaction(aggregate.saveTx(customer), outbox.eventTx(event))
     }
 }
