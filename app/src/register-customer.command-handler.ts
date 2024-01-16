@@ -5,6 +5,7 @@ import { CommandHandler, HandleCommand } from '../../src/command'
 import { transaction } from '../../src/util/store-operations'
 import outbox from '../../src/outbox/outbox.store'
 import { v4 } from 'uuid'
+import { addMinutes } from 'date-fns'
 
 export class CustomerRegisteredEvent {
     constructor(
@@ -33,6 +34,9 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
 
         const event = new CustomerRegisteredEvent(customer.customerId, customer.firstName, customer.lastName)
 
-        await transaction(aggregate.saveTx(customer), outbox.eventTx(event))
+        await transaction(
+            aggregate.saveTx(customer),
+            outbox.eventTx(event, { publishAt: addMinutes(new Date(), 10).toISOString() })
+        )
     }
 }
