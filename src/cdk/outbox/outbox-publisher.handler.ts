@@ -30,6 +30,7 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent | SQSEve
             eventsToPut.push({
                 EventBusName: EVENT_BUS_NAME,
                 DetailType: 'EVENT',
+                Source: 'OutboxPublisher',
                 Detail: JSON.stringify(message),
             })
         }
@@ -73,19 +74,23 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent | SQSEve
     console.log('commandsToPublish', commandsToPublish)
 
     if (eventsToPut.length) {
-        await eventBridgeClient.send(
+        const response = await eventBridgeClient.send(
             new PutEventsCommand({
                 Entries: eventsToPut,
             })
         )
+
+        console.log('eventsResponse', response)
     }
 
     if (commandsToPublish.length) {
-        await snsClient.send(
+        const response = await snsClient.send(
             new PublishBatchCommand({
                 TopicArn: COMMAND_BUS_ARN,
                 PublishBatchRequestEntries: commandsToPublish,
             })
         )
+
+        console.log('commandsResponse', response)
     }
 }

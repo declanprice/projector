@@ -1,0 +1,6 @@
+- outbox
+- process handler
+- subscription handler
+- error handling
+- unit / integration / e2e tests
+- consistent logging & monitoring

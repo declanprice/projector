@@ -7,7 +7,6 @@ import { CustomerProjection } from './customer.projection'
 })
 export class GetCustomerByIdQueryHandler implements HandleQuery {
     async handle(params: any, query: any) {
-        // return projection.get(CustomerProjection, '1')
-        return projection.query(CustomerProjection).pk('id', '1').exec()
+        return projection.get(CustomerProjection, '1')
     }
 }
