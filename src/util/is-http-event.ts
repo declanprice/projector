@@ -1,5 +1,5 @@
-import { APIGatewayProxyEventV2, SQSEvent } from 'aws-lambda'
+import { APIGatewayProxyEventV2 } from 'aws-lambda'
 
 export const isHttpEvent = (event: any): event is APIGatewayProxyEventV2 => {
-    return 'routeKey' in event
+    return 'routeKey' in event && 'requestContext' in event
 }

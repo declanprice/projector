@@ -1,6 +1,5 @@
 import { Customer } from './customer.aggregate'
 import { CustomerProjection } from './customer.projection'
-
 import { ChangeEvent, ChangeHandler, ChangeHandlerGroup, ChangeType } from '../../src/event'
 import projection from '../../src/projection/projection.store'
 

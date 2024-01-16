@@ -32,7 +32,7 @@ export const ChangeHandler = (type: Type, change: ChangeType): MethodDecorator =
     return (target: any, propertyKey: string | symbol) => {
         Reflect.defineMetadata(`${type.name}-${change}`, propertyKey, target.constructor)
 
-        const changeTypes = getChangeTypes(target.constructor)
+        const changeTypes = getChangeGroupTypes(target.constructor)
 
         changeTypes.push({
             type: type.name,
@@ -47,7 +47,7 @@ export const getChangeHandlerMethod = (target: any, type: string, change: Change
     return Reflect.getMetadata(`${type}-${change}`, target)
 }
 
-export const getChangeTypes = (target: any): { type: string; change: ChangeType }[] => {
+export const getChangeGroupTypes = (target: any): { type: string; change: ChangeType }[] => {
     const changeTypes = Reflect.getMetadata(CHANGE_TYPES_METADATA, target)
 
     if (!changeTypes) return []

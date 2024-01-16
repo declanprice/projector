@@ -4,15 +4,14 @@ import { Construct } from 'constructs'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
 import { Match, Rule } from 'aws-cdk-lib/aws-events'
 import { SqsQueue } from 'aws-cdk-lib/aws-events-targets'
+import { Queue } from 'aws-cdk-lib/aws-sqs'
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { EventBus } from './event-bus'
-import { getEventNames } from '../../event/event-handler.decorator'
+import { getEventGroupTypes } from '../../event/event-handler.decorator'
 import { SubscriptionUpdateBus } from '../subscription/subscription-update-bus'
 import { AggregateStore } from '../aggregate'
 import { OutboxStore } from '../outbox'
 import { ProjectionStore } from '../projection'
-import { Queue } from 'aws-cdk-lib/aws-sqs'
-import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
-import { getChangeTypes } from '../../event/change-handler.decorator'
 
 type EventHandlerProps = {
     eventBus: EventBus
@@ -44,16 +43,27 @@ export class EventHandler extends NodejsFunction {
 
         this.addEventSource(new SqsEventSource(handlerQueue, { batchSize: 10 }))
 
+        const eventGroupTypes = getEventGroupTypes(handler)
+
+        if (!eventGroupTypes.length) throw new Error('@EventHandlerGroup must have at least one valid @EventHandler')
+
         new Rule(this, `${handler.name}-Rule`, {
             ruleName: `${handler.name}-Rule`,
             eventBus,
             eventPattern: {
-                detailType: Match.exactString('BUS_EVENT'),
-                detail: Match.anyOf(
-                    getEventNames(handler).map((type) => ({
-                        type,
-                    }))
-                ),
+                detailType: Match.exactString('EVENT'),
+                detail:
+                    eventGroupTypes.length > 1
+                        ? {
+                              $or: Match.anyOf(
+                                  getEventGroupTypes(handler).map((type) => ({
+                                      type: Match.exactString(type),
+                                  }))
+                              ),
+                          }
+                        : {
+                              type: Match.exactString(eventGroupTypes[0]),
+                          },
             },
             targets: [new SqsQueue(handlerQueue)],
         })

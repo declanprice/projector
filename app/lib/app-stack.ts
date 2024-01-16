@@ -12,11 +12,13 @@ import {
     HandlerApi,
     ProjectionStore,
     ChangeHandler,
+    EventHandler,
 } from '../../src/cdk'
 import { RegisterCustomerCommandHandler } from '../src/register-customer.command-handler'
 import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id.query-handler'
 import { CustomerProjection } from '../src/customer.projection'
 import { CustomerProjectionChangeHandler } from '../src/customer-projection.change.handler'
+import { CustomerRegisteredEventHandler } from '../src/customer-registered.event-handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -77,6 +79,11 @@ export class AppStack extends cdk.Stack {
             eventBus,
             projectionStores: [customerProjection],
             entry: 'src/customer-projection.change.handler.ts',
+        })
+
+        new EventHandler(this, CustomerRegisteredEventHandler, {
+            eventBus,
+            entry: 'src/customer-registered.event-handler.ts',
         })
     }
 }

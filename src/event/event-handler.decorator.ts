@@ -30,7 +30,7 @@ export const EventHandler = (event: Type): MethodDecorator => {
     return (target: any, propertyKey: string | symbol) => {
         Reflect.defineMetadata(event.name, propertyKey, target.constructor)
 
-        const eventNames = getEventNames(target.constructor)
+        const eventNames = getEventGroupTypes(target.constructor)
 
         eventNames.push(event.name)
 
@@ -42,7 +42,7 @@ export const getEventHandlerProps = (target: any, eventName: string): string => 
     return Reflect.getMetadata(eventName, target)
 }
 
-export const getEventNames = (target: any): string[] => {
+export const getEventGroupTypes = (target: any): string[] => {
     const eventNames = Reflect.getMetadata(EVENT_NAMES_METADATA, target) as string[]
 
     if (!eventNames) return []

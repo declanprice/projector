@@ -5,14 +5,14 @@ import { Runtime } from 'aws-cdk-lib/aws-lambda'
 import { Match, Rule } from 'aws-cdk-lib/aws-events'
 import { SqsQueue } from 'aws-cdk-lib/aws-events-targets'
 import { EventBus } from './event-bus'
-import { getEventNames } from '../../event/event-handler.decorator'
+import { getEventGroupTypes } from '../../event/event-handler.decorator'
 import { SubscriptionUpdateBus } from '../subscription/subscription-update-bus'
 import { AggregateStore } from '../aggregate'
 import { OutboxStore } from '../outbox'
 import { ProjectionStore } from '../projection'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
-import { getChangeTypes } from '../../event/change-handler.decorator'
+import { getChangeGroupTypes } from '../../event/change-handler.decorator'
 
 type ChangeHandlerProps = {
     eventBus: EventBus
@@ -44,19 +44,29 @@ export class ChangeHandler extends NodejsFunction {
 
         this.addEventSource(new SqsEventSource(handlerQueue, { batchSize: 10 }))
 
+        const changeGroupTypes = getChangeGroupTypes(handler)
+
+        if (!changeGroupTypes.length) throw new Error('@ChangeHandlerGroup must have at least one valid @ChangeHandler')
+
         new Rule(this, `${handler.name}-Rule`, {
             ruleName: `${handler.name}-Rule`,
             eventBus,
             eventPattern: {
                 detailType: Match.exactString('CHANGE_EVENT'),
-                detail: {
-                    $or: Match.anyOf(
-                        getChangeTypes(handler).map((type) => ({
-                            type: Match.exactString(type.type),
-                            change: Match.exactString(type.change),
-                        }))
-                    ),
-                },
+                detail:
+                    changeGroupTypes.length > 1
+                        ? {
+                              $or: Match.anyOf(
+                                  getChangeGroupTypes(handler).map((type) => ({
+                                      type: Match.exactString(type.type),
+                                      change: Match.exactString(type.change),
+                                  }))
+                              ),
+                          }
+                        : {
+                              type: Match.exactString(changeGroupTypes[0].type),
+                              change: Match.exactString(changeGroupTypes[0].change),
+                          },
             },
             targets: [new SqsQueue(handlerQueue)],
         })

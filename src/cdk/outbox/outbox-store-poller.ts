@@ -5,7 +5,6 @@ import { OutboxStore } from './outbox-store'
 import { OutboxPublisherQueue } from './outbox-publisher-queue'
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events'
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets'
-import { EventBus } from '../event'
 
 type OutboxStorePollerProps = {
     outboxStore: OutboxStore

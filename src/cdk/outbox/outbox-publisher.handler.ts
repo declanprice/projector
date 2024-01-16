@@ -1,13 +1,13 @@
 import { DynamoDBStreamEvent, SQSEvent } from 'aws-lambda'
-import { isSqsRecord } from '../../util/is-sqs-event'
-import { isDynamoRecord } from '../../util/is-dynamo-record'
 import { EventBridgeClient, PutEventsCommand, PutEventsRequestEntry } from '@aws-sdk/client-eventbridge'
 import { PublishBatchCommand, PublishBatchRequestEntry, SNSClient } from '@aws-sdk/client-sns'
-import { OutboxBusType, OutboxItem } from '../../outbox/outbox.item'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { v4 } from 'uuid'
+import { isSqsRecord } from '../../util/is-sqs-event'
+import { isDynamoEvent } from '../../util/is-dynamo-event'
+import { OutboxBusType, OutboxItem } from '../../outbox/outbox.item'
 import { EventBusMessage } from '../../event'
 import { CommandBusMessage } from '../../command'
-import { v4 } from 'uuid'
 
 const eventBridgeClient = new EventBridgeClient()
 const snsClient = new SNSClient()
@@ -20,17 +20,17 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent | SQSEve
     const commandsToPublish: PublishBatchRequestEntry[] = []
 
     const forwardOutboxItem = (item: OutboxItem) => {
-        const busMessage: EventBusMessage<any> | CommandBusMessage<any> = {
+        const message: EventBusMessage<any> | CommandBusMessage<any> = {
             type: item.type,
-            timestamp: item.timestamp,
             data: item.data,
+            timestamp: item.timestamp,
         }
 
         if (item.bus === OutboxBusType.EVENT) {
             eventsToPut.push({
                 EventBusName: EVENT_BUS_NAME,
-                DetailType: 'BUS_EVENT',
-                Detail: JSON.stringify(busMessage),
+                DetailType: 'EVENT',
+                Detail: JSON.stringify(message),
             })
         }
 
@@ -38,23 +38,35 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent | SQSEve
             commandsToPublish.push({
                 Id: v4(),
                 MessageAttributes: {
-                    type: { StringValue: busMessage.type, DataType: 'String' },
+                    type: { StringValue: message.type, DataType: 'String' },
                 },
-                Message: JSON.stringify(busMessage),
+                Message: JSON.stringify(message),
             })
         }
     }
 
     for (const record of event.Records) {
+        let item: OutboxItem | null = null
+
         if (isSqsRecord(record)) {
-            forwardOutboxItem(JSON.parse(record.body))
+            item = JSON.parse(record.body) as OutboxItem
         }
 
-        if (isDynamoRecord(record)) {
-            if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
-                forwardOutboxItem(unmarshall(record.dynamodb?.NewImage as any) as OutboxItem)
+        if (isDynamoEvent(record)) {
+            if ((record.eventName === 'INSERT' || record.eventName === 'MODIFY') && record.dynamodb?.NewImage) {
+                item = unmarshall(record.dynamodb.NewImage as any) as OutboxItem
+            }
+
+            if (record.eventName === 'REMOVE') {
+                continue
             }
         }
+
+        if (item === null) {
+            throw new Error(`[Invalid Outbox Event] - ${JSON.stringify(event, null, 2)}`)
+        }
+
+        forwardOutboxItem(item)
     }
 
     console.log('eventsToPut', eventsToPut)

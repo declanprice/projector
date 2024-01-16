@@ -4,6 +4,7 @@ import { Customer } from './customer.aggregate'
 import { CommandHandler, HandleCommand } from '../../src/command'
 import { transaction } from '../../src/util/store-operations'
 import outbox from '../../src/outbox/outbox.store'
+import { v4 } from 'uuid'
 
 export class CustomerRegisteredEvent {
     constructor(
@@ -25,7 +26,7 @@ const RegisterCustomerSchema = object({
 export class RegisterCustomerCommandHandler implements HandleCommand {
     async handle(command: Output<typeof RegisterCustomerSchema>) {
         const customer = new Customer({
-            customerId: '1',
+            customerId: v4(),
             firstName: 'Declan',
             lastName: 'Price',
         })

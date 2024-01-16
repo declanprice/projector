@@ -5,5 +5,5 @@ export const isSnsEvent = (event: any): event is SNSEvent => {
 }
 
 export const isSnsMessage = (event: any): event is SNSMessage => {
-    return 'TopicArn' in event
+    return 'TopicArn' in event && 'Message' in event
 }
