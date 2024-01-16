@@ -5,7 +5,7 @@ import { marshall } from '@aws-sdk/util-dynamodb'
 import { isClass } from '../util/is-class'
 
 type OutboxSetOptions = {
-    timestamp: string
+    publishAt: string
 }
 
 class OutboxStore {
@@ -29,8 +29,8 @@ class OutboxStore {
         const item: OutboxItem = {
             id,
             bus: OutboxBusType.COMMAND,
-            status: OutboxItemStatus.PENDING,
-            timestamp: options?.timestamp ?? new Date().toISOString(),
+            status: options?.publishAt ? OutboxItemStatus.SCHEDULED : OutboxItemStatus.READY,
+            timestamp: options?.publishAt ?? new Date().toISOString(),
             type: command.constructor.name,
             data: command,
         }
@@ -59,8 +59,8 @@ class OutboxStore {
         const item: OutboxItem = {
             id,
             bus: OutboxBusType.EVENT,
-            status: OutboxItemStatus.PENDING,
-            timestamp: options?.timestamp ?? new Date().toISOString(),
+            status: options?.publishAt ? OutboxItemStatus.SCHEDULED : OutboxItemStatus.READY,
+            timestamp: options?.publishAt ?? new Date().toISOString(),
             type: event.constructor.name,
             data: event,
         }

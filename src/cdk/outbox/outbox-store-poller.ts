@@ -20,12 +20,15 @@ export class OutboxStorePoller extends NodejsFunction {
             entry: '../src/cdk/outbox/outbox-poller.handler.ts',
             handler: 'outboxPollerHandler',
             environment: {
+                OUTBOX_STORE_NAME: props.outboxStore.tableName,
                 OUTBOX_PUBLISHER_QUEUE_URL: props.outboxPublisherQueue.queueUrl,
             },
             ...props,
         })
 
-        const { outboxPublisherQueue } = props
+        const { outboxStore, outboxPublisherQueue } = props
+
+        outboxStore.grantReadData(this)
 
         outboxPublisherQueue.grantSendMessages(this)
 

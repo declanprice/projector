@@ -24,6 +24,7 @@ export class OutboxStorePublisher extends NodejsFunction {
             entry: '../src/cdk/outbox/outbox-publisher.handler.ts',
             handler: 'outboxPublisherHandler',
             environment: {
+                OUTBOX_STORE_NAME: props.outboxStore.tableName,
                 COMMAND_BUS_ARN: props.commandBus.topicArn,
                 EVENT_BUS_NAME: props.eventBus.eventBusName,
             },
@@ -35,6 +36,8 @@ export class OutboxStorePublisher extends NodejsFunction {
         commandBus.grantPublish(this)
 
         eventBus.grantPutEventsTo(this)
+
+        outboxStore.grantReadWriteData(this)
 
         this.addEventSource(
             new DynamoEventSource(outboxStore, {

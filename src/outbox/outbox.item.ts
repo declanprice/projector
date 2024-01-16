@@ -1,7 +1,7 @@
 export enum OutboxItemStatus {
-    PENDING = 'PENDING',
-    PUBLISHED = 'PUBLISHED',
+    READY = 'PENDING',
     SCHEDULED = 'SCHEDULED',
+    PUBLISHED = 'PUBLISHED',
 }
 
 export enum OutboxBusType {
