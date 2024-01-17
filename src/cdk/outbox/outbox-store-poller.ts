@@ -28,7 +28,7 @@ export class OutboxStorePoller extends NodejsFunction {
 
         const { outboxStore, outboxPublisherQueue } = props
 
-        outboxStore.grantReadData(this)
+        outboxStore.grantReadWriteData(this)
 
         outboxPublisherQueue.grantSendMessages(this)
 

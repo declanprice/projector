@@ -14,7 +14,7 @@ type StateStorePublisherProps = {
 export class AggregateStorePublisher extends NodejsFunction {
     constructor(scope: Construct, id: string, props: StateStorePublisherProps) {
         super(scope, id, {
-            functionName: `${id}-PublisherHandler`,
+            functionName: `${id}`,
             runtime: Runtime.NODEJS_20_X,
             timeout: Duration.seconds(10),
             memorySize: 512,
@@ -30,6 +30,8 @@ export class AggregateStorePublisher extends NodejsFunction {
 
         eventBus.grantPutEventsTo(this)
 
-        this.addEventSource(new DynamoEventSource(aggregateStore, { batchSize: 10, startingPosition: StartingPosition.LATEST }))
+        this.addEventSource(
+            new DynamoEventSource(aggregateStore, { batchSize: 10, startingPosition: StartingPosition.LATEST })
+        )
     }
 }

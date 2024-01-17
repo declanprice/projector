@@ -29,7 +29,7 @@ class OutboxStore {
         const item: OutboxItem = {
             id,
             bus: OutboxBusType.COMMAND,
-            status: options?.publishAt ? OutboxItemStatus.SCHEDULED : OutboxItemStatus.READY,
+            status: options?.publishAt ? OutboxItemStatus.SCHEDULED : OutboxItemStatus.PENDING,
             timestamp: options?.publishAt ?? new Date().toISOString(),
             type: command.constructor.name,
             data: command,
@@ -59,7 +59,7 @@ class OutboxStore {
         const item: OutboxItem = {
             id,
             bus: OutboxBusType.EVENT,
-            status: options?.publishAt ? OutboxItemStatus.SCHEDULED : OutboxItemStatus.READY,
+            status: options?.publishAt ? OutboxItemStatus.SCHEDULED : OutboxItemStatus.PENDING,
             timestamp: options?.publishAt ?? new Date().toISOString(),
             type: event.constructor.name,
             data: event,

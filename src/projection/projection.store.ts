@@ -2,7 +2,7 @@ import { DynamoDBClient, GetItemCommand, PutItemCommand, TransactWriteItem } fro
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import { getProjectionId } from './projection.decorator'
 import { Type } from '../util/type'
-import { ProjectionQueryBuilder } from './projection-query-builder'
+import { DynamoQueryBuilder } from '../util/dynamo-query-builder'
 
 class ProjectionStore {
     readonly client = new DynamoDBClient()
@@ -28,7 +28,7 @@ class ProjectionStore {
     }
 
     query(type: Type) {
-        return new ProjectionQueryBuilder(type, this.client)
+        return new DynamoQueryBuilder(`${type.name}Store`, this.client)
     }
 
     async save(instance: any) {

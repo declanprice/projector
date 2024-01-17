@@ -1,6 +1,7 @@
 export enum OutboxItemStatus {
-    READY = 'PENDING',
+    PENDING = 'PENDING',
     SCHEDULED = 'SCHEDULED',
+    SCHEDULED_IN_QUEUE = 'SCHEDULED_IN_QUEUE',
     PUBLISHED = 'PUBLISHED',
 }
 

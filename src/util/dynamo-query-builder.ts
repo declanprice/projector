@@ -10,7 +10,6 @@ import {
 } from '@aws/dynamodb-expressions'
 import { DynamoDBClient, QueryCommand, AttributeValue } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { Type } from '../util/type'
 
 type SortKeyCondition =
     | EqualityExpressionPredicate
@@ -21,9 +20,9 @@ type SortKeyCondition =
     | BetweenExpressionPredicate
     | BeginsWithPredicate
 
-export class ProjectionQueryBuilder<E> {
+export class DynamoQueryBuilder<E> {
     constructor(
-        private readonly type: Type<E>,
+        private readonly tableName: string,
         private readonly client: DynamoDBClient
     ) {}
 
@@ -39,18 +38,24 @@ export class ProjectionQueryBuilder<E> {
         }
         sort?: 'asc' | 'desc'
         limit?: number
+        consistent?: boolean
         startAt?: Record<string, AttributeValue>
         expressionAttributes: ExpressionAttributes
     } = {
         expressionAttributes: new ExpressionAttributes(),
     }
 
-    using(index: string): ProjectionQueryBuilder<E> {
+    using(index: string): DynamoQueryBuilder<E> {
         this.query.using = index
         return this
     }
 
-    pk(name: string, value: string | number): ProjectionQueryBuilder<E> {
+    consistent(consistent: boolean): DynamoQueryBuilder<E> {
+        this.query.consistent = consistent
+        return this
+    }
+
+    pk(name: string, value: string | number): DynamoQueryBuilder<E> {
         this.query.pk = {
             name: this.query.expressionAttributes.addName(name),
             value: this.query.expressionAttributes.addValue(value),
@@ -59,7 +64,7 @@ export class ProjectionQueryBuilder<E> {
         return this
     }
 
-    sk(name: string, condition: SortKeyCondition): ProjectionQueryBuilder<E> {
+    sk(name: string, condition: SortKeyCondition): DynamoQueryBuilder<E> {
         this.query.sk = {
             name,
             condition,
@@ -68,17 +73,17 @@ export class ProjectionQueryBuilder<E> {
         return this
     }
 
-    limit(limit: number): ProjectionQueryBuilder<E> {
+    limit(limit: number): DynamoQueryBuilder<E> {
         this.query.limit = limit
         return this
     }
 
-    startAt(key: Record<string, AttributeValue>): ProjectionQueryBuilder<E> {
+    startAt(key: Record<string, AttributeValue>): DynamoQueryBuilder<E> {
         this.query.startAt = key
         return this
     }
 
-    sort(direction: 'asc' | 'desc'): ProjectionQueryBuilder<E> {
+    sort(direction: 'asc' | 'desc'): DynamoQueryBuilder<E> {
         this.query.sort = direction
         return this
     }
@@ -123,16 +128,15 @@ export class ProjectionQueryBuilder<E> {
             return `${this.query.pk.name} = ${this.query.pk.value}`
         }
 
-        console.log(`sort order: ${this.query.sort !== 'desc'}`)
-
         const result = await this.client.send(
             new QueryCommand({
                 IndexName: this.query.using,
-                TableName: `${this.type.name}Store`,
+                TableName: this.tableName,
                 KeyConditionExpression: getKeyCondition(),
                 ExpressionAttributeNames: this.query.expressionAttributes.names,
                 ExpressionAttributeValues: this.query.expressionAttributes.values as any,
                 Limit: this.query.limit,
+                ConsistentRead: this.query.consistent,
                 ScanIndexForward: this.query.sort !== 'desc',
                 ExclusiveStartKey: this.query.startAt,
             })

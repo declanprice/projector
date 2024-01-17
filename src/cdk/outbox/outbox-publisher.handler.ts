@@ -2,11 +2,13 @@ import { DynamoDBStreamEvent } from 'aws-lambda'
 import { EventBridgeClient, PutEventsCommand, PutEventsRequestEntry } from '@aws-sdk/client-eventbridge'
 import { PublishBatchCommand, PublishBatchRequestEntry, SNSClient } from '@aws-sdk/client-sns'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { DynamoDBClient, TransactWriteItem, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb'
+import { DynamoDBClient, GetItemCommand, TransactWriteItem, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb'
 import { v4 } from 'uuid'
 import { OutboxBusType, OutboxItem, OutboxItemStatus } from '../../outbox/outbox.item'
 import { EventBusMessage } from '../../event'
 import { CommandBusMessage } from '../../command'
+import { isDynamoRecord } from '../../util/is-dynamo-record'
+import { isSqsRecord } from '../../util/is-sqs-event'
 
 const eventBridgeClient = new EventBridgeClient()
 const snsClient = new SNSClient()
@@ -20,6 +22,24 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
     const eventsToPut: PutEventsRequestEntry[] = []
     const commandsToPublish: PublishBatchRequestEntry[] = []
     const outboxItemsToUpdate: TransactWriteItem[] = []
+
+    const getOutboxItem = async (id: string): Promise<OutboxItem | null> => {
+        const response = await dynamoClient.send(
+            new GetItemCommand({
+                TableName: OUTBOX_STORE_NAME,
+                Key: {
+                    id: {
+                        S: id,
+                    },
+                },
+                ConsistentRead: true,
+            })
+        )
+
+        if (!response.Item) return null
+
+        return unmarshall(response.Item) as OutboxItem
+    }
 
     const forwardOutboxItem = (item: OutboxItem) => {
         const message: EventBusMessage<any> | CommandBusMessage<any> = {
@@ -71,18 +91,34 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
     for (const record of event.Records) {
         let item: OutboxItem | null = null
 
-        if (record.eventName === 'REMOVE') {
-            console.log(`record is type ${record.eventName}, ignoring record.`)
-            continue
-        }
+        if (isSqsRecord(record)) {
+            const item = JSON.parse(record.body) as OutboxItem
 
-        if ((record.eventName === 'INSERT' || record.eventName === 'MODIFY') && record.dynamodb?.NewImage) {
-            item = unmarshall(record.dynamodb.NewImage as any) as OutboxItem
+            const itemFromStore = await getOutboxItem(item.id)
 
-            if (item.status === OutboxItemStatus.READY) {
+            if (itemFromStore && itemFromStore.status === OutboxItemStatus.SCHEDULED_IN_QUEUE) {
                 forwardOutboxItem(item)
             } else {
-                console.log(`item status is ${item.status}, ignoring record.`)
+                console.log(
+                    `item with id ${item.id} status is not ${OutboxItemStatus.SCHEDULED_IN_QUEUE}, ignoring item`
+                )
+            }
+        }
+
+        if (isDynamoRecord(record)) {
+            if (record.eventName === 'REMOVE' || record.eventName === 'MODIFY') {
+                console.log(`record is type ${record.eventName}, ignoring record`)
+                continue
+            }
+
+            if (record.eventName === 'INSERT' && record.dynamodb?.NewImage) {
+                item = unmarshall(record.dynamodb.NewImage as any) as OutboxItem
+
+                if (item.status === OutboxItemStatus.PENDING) {
+                    forwardOutboxItem(item)
+                } else {
+                    console.log(`item status is ${item.status}, ignoring item ${JSON.stringify(item, null, 2)}`)
+                }
             }
         }
     }

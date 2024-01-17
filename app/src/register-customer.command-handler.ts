@@ -36,7 +36,7 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
 
         await transaction(
             aggregate.saveTx(customer),
-            outbox.eventTx(event, { publishAt: addMinutes(new Date(), 10).toISOString() })
+            outbox.eventTx(event, { publishAt: addMinutes(new Date(), 1).toISOString() })
         )
     }
 }
