@@ -1,5 +1,5 @@
 import { EventBusMessage, EventHandler, EventHandlerGroup } from '../../src/event'
-import { CustomerRegisteredEvent } from './register-customer.command-handler'
+import { CustomerRegisteredEvent } from './register-customer-command.handler'
 
 @EventHandlerGroup({
     batchSize: 10,

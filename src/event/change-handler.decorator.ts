@@ -6,9 +6,9 @@ import 'reflect-metadata'
 import { ChangeType } from './change-event.type'
 import { changeHandler } from './change.handler'
 
-const CHANGE_HANDLER_METADATA = symbol('CHANGE_HANDLER_METADATA')
+const CHANGE_HANDLER_GROUP = symbol('CHANGE_HANDLER_GROUP')
 
-const CHANGE_TYPES_METADATA = symbol('CHANGE_TYPES_METADATA')
+const CHANGE_HANDLER_GROUP_TYPES = symbol('CHANGE_HANDLER_GROUP_TYPES')
 
 export type ChangeHandlerGroupProps = {
     batchSize?: number
@@ -16,7 +16,7 @@ export type ChangeHandlerGroupProps = {
 
 export const ChangeHandlerGroup = (props: ChangeHandlerGroupProps): ClassDecorator => {
     return (constructor: any) => {
-        Reflect.defineMetadata(CHANGE_HANDLER_METADATA, props, constructor)
+        Reflect.defineMetadata(CHANGE_HANDLER_GROUP, props, constructor)
 
         constructor.prototype.changeHandler = (event: SQSEvent) => {
             return changeHandler(new constructor(), props, event)
@@ -24,33 +24,33 @@ export const ChangeHandlerGroup = (props: ChangeHandlerGroupProps): ClassDecorat
     }
 }
 
+export const getChangeHandlerGroupTypes = (target: any): { type: string; change: ChangeType }[] => {
+    const changeTypes = Reflect.getMetadata(CHANGE_HANDLER_GROUP_TYPES, target)
+
+    if (!changeTypes) return []
+
+    return changeTypes
+}
+
 export const getChangeHandlerGroupProps = (target: any): ChangeHandlerGroupProps => {
-    return Reflect.getMetadata(CHANGE_HANDLER_METADATA, target)
+    return Reflect.getMetadata(CHANGE_HANDLER_GROUP, target)
 }
 
 export const ChangeHandler = (type: Type, change: ChangeType): MethodDecorator => {
     return (target: any, propertyKey: string | symbol) => {
         Reflect.defineMetadata(`${type.name}-${change}`, propertyKey, target.constructor)
 
-        const changeTypes = getChangeGroupTypes(target.constructor)
+        const changeTypes = getChangeHandlerGroupTypes(target.constructor)
 
         changeTypes.push({
             type: type.name,
             change,
         })
 
-        Reflect.defineMetadata(CHANGE_TYPES_METADATA, changeTypes, target.constructor)
+        Reflect.defineMetadata(CHANGE_HANDLER_GROUP_TYPES, changeTypes, target.constructor)
     }
 }
 
 export const getChangeHandlerMethod = (target: any, type: string, change: ChangeType): string => {
     return Reflect.getMetadata(`${type}-${change}`, target)
-}
-
-export const getChangeGroupTypes = (target: any): { type: string; change: ChangeType }[] => {
-    const changeTypes = Reflect.getMetadata(CHANGE_TYPES_METADATA, target)
-
-    if (!changeTypes) return []
-
-    return changeTypes
 }

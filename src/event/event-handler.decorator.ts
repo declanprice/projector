@@ -4,9 +4,9 @@ import { Type } from '../util/type'
 import { symbol } from 'valibot'
 import 'reflect-metadata'
 
-const EVENT_HANDLER_METADATA = symbol('EVENT_HANDLER_METADATA')
+const EVENT_HANDLER_GROUP = symbol('EVENT_HANDLER_GROUP')
 
-const EVENT_NAMES_METADATA = symbol('EVENT_NAMES_METADATA')
+const EVENT_HANDLER_GROUP_TYPES = symbol('EVENT_HANDLER_GROUP_TYPES')
 
 export type EventHandlerProps = {
     batchSize?: number
@@ -14,7 +14,7 @@ export type EventHandlerProps = {
 
 export const EventHandlerGroup = (props: EventHandlerProps): ClassDecorator => {
     return (constructor: any) => {
-        Reflect.defineMetadata(EVENT_HANDLER_METADATA, props, constructor)
+        Reflect.defineMetadata(EVENT_HANDLER_GROUP, props, constructor)
 
         constructor.prototype.eventHandler = (event: SQSEvent) => {
             return eventHandler(new constructor(), props, event)
@@ -22,30 +22,30 @@ export const EventHandlerGroup = (props: EventHandlerProps): ClassDecorator => {
     }
 }
 
+export const getEventHandlerGroupTypes = (target: any): string[] => {
+    const eventNames = Reflect.getMetadata(EVENT_HANDLER_GROUP_TYPES, target) as string[]
+
+    if (!eventNames) return []
+
+    return eventNames
+}
+
 export const getEventHandlerGroupProps = (target: any): EventHandlerProps => {
-    return Reflect.getMetadata(EVENT_HANDLER_METADATA, target)
+    return Reflect.getMetadata(EVENT_HANDLER_GROUP, target)
 }
 
 export const EventHandler = (event: Type): MethodDecorator => {
     return (target: any, propertyKey: string | symbol) => {
         Reflect.defineMetadata(event.name, propertyKey, target.constructor)
 
-        const eventNames = getEventGroupTypes(target.constructor)
+        const eventNames = getEventHandlerGroupTypes(target.constructor)
 
         eventNames.push(event.name)
 
-        Reflect.defineMetadata(EVENT_NAMES_METADATA, eventNames, target.constructor)
+        Reflect.defineMetadata(EVENT_HANDLER_GROUP_TYPES, eventNames, target.constructor)
     }
 }
 
 export const getEventHandlerProps = (target: any, eventName: string): string => {
     return Reflect.getMetadata(eventName, target)
-}
-
-export const getEventGroupTypes = (target: any): string[] => {
-    const eventNames = Reflect.getMetadata(EVENT_NAMES_METADATA, target) as string[]
-
-    if (!eventNames) return []
-
-    return eventNames
 }

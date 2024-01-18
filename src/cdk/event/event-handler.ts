@@ -7,7 +7,7 @@ import { SqsQueue } from 'aws-cdk-lib/aws-events-targets'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { EventBus } from './event-bus'
-import { getEventGroupTypes } from '../../event/event-handler.decorator'
+import { getEventHandlerGroupTypes } from '../../event/event-handler.decorator'
 import { SubscriptionUpdateBus } from '../subscription/subscription-update-bus'
 import { AggregateStore } from '../aggregate'
 import { OutboxStore } from '../outbox'
@@ -43,7 +43,7 @@ export class EventHandler extends NodejsFunction {
 
         this.addEventSource(new SqsEventSource(handlerQueue, { batchSize: 10 }))
 
-        const eventGroupTypes = getEventGroupTypes(handler)
+        const eventGroupTypes = getEventHandlerGroupTypes(handler)
 
         if (!eventGroupTypes.length) throw new Error('@EventHandlerGroup must have at least one valid @EventHandler')
 
@@ -56,7 +56,7 @@ export class EventHandler extends NodejsFunction {
                     eventGroupTypes.length > 1
                         ? {
                               $or: Match.anyOf(
-                                  getEventGroupTypes(handler).map((type) => ({
+                                  getEventHandlerGroupTypes(handler).map((type) => ({
                                       type: Match.exactString(type),
                                   }))
                               ),

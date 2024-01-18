@@ -1,35 +1,71 @@
-import { EventBridgeEvent, SQSEvent } from 'aws-lambda'
+import { symbol } from 'valibot'
+import { SQSEvent } from 'aws-lambda'
 import { Type } from '../util/type'
 import { processHandler } from './process.handler'
-import { processAssociationsHandler } from './process-associations.handler'
+
+const PROCESS_PROPS = symbol('PROCESS_PROPS')
+const PROCESS_EVENT_TYPES = symbol('PROCESS_EVENT_TYPES')
 
 export type ProcessProps = {
+    defaultKey: string
     batchSize?: number
-    defaultKey?: string
 }
+
+export type ProcessHandlerProps = {
+    start?: boolean
+    key?: string
+}
+
+export type ProcessHandlerMetadata = {
+    method: string | symbol
+} & ProcessHandlerProps
 
 export const Process = (props: ProcessProps): ClassDecorator => {
     return (constructor: any) => {
+        Reflect.defineMetadata(PROCESS_PROPS, props, constructor)
+
         constructor.prototype.processHandler = (event: SQSEvent) => {
             return processHandler(new constructor(), props, event)
-        }
-
-        constructor.prototype.processAssociationHandler = (event: SQSEvent) => {
-            return processAssociationsHandler(new constructor(), props, event)
         }
     }
 }
 
-type ProcessHandlerProps = {}
-
 export const ProcessHandler = (event: Type, props?: ProcessHandlerProps): MethodDecorator => {
-    return (object: Object, propertyKey: string | symbol) => {}
+    return (target: any, method: string | symbol) => {
+        const handlerMetadata: ProcessHandlerMetadata = {
+            ...props,
+            method,
+        }
+
+        Reflect.defineMetadata(event.name, handlerMetadata, target.constructor)
+
+        const eventTypes = getProcessEventTypes(target.constructor)
+
+        eventTypes.push(event.name)
+
+        Reflect.defineMetadata(PROCESS_EVENT_TYPES, eventTypes, target.constructor)
+    }
 }
 
 export const StartProcess = (event: Type, props?: ProcessHandlerProps): MethodDecorator => {
-    return (object: Object, propertyKey: string | symbol) => {}
+    return ProcessHandler(event, {
+        ...props,
+        start: true,
+    })
 }
 
-export const EndProcess = (event: Type, props?: ProcessHandlerProps): MethodDecorator => {
-    return (object: Object, propertyKey: string | symbol) => {}
+export const getProcessProps = (target: any): ProcessProps => {
+    return Reflect.getMetadata(PROCESS_PROPS, target)
+}
+
+export const getProcessEventTypes = (target: any): string[] => {
+    const eventTypes = Reflect.getMetadata(PROCESS_EVENT_TYPES, target)
+
+    if (!eventTypes) return []
+
+    return eventTypes
+}
+
+export const getProcessHandlerProps = (eventType: string, target: any): ProcessHandlerMetadata => {
+    return Reflect.getMetadata(eventType, target)
 }

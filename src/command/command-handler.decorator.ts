@@ -2,16 +2,18 @@ import { ObjectSchema, symbol } from 'valibot'
 import { commandHandler } from './command.handler'
 import { APIGatewayProxyEventV2, SQSEvent } from 'aws-lambda'
 import 'reflect-metadata'
+import { Type } from '../util/type'
 
 const COMMAND_HANDLER_METADATA = symbol('COMMAND_HANDLER_METADATA')
 
 type CommandHandlerDecoratorProps = {
-    path: string
+    on?: Type
+    path?: string
     method?: 'POST' | 'PUT'
     schema?: ObjectSchema<any>
 }
 
-export const CommandHandler = (props: CommandHandlerDecoratorProps): ClassDecorator => {
+export const CommandHandler = (props: CommandHandlerDecoratorProps = {}): ClassDecorator => {
     return (constructor: any) => {
         Reflect.defineMetadata(COMMAND_HANDLER_METADATA, props, constructor)
 

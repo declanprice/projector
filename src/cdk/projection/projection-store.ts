@@ -6,8 +6,9 @@ import { RemovalPolicy } from 'aws-cdk-lib'
 type ProjectionStoreProps = {} & Partial<TableProps>
 
 export class ProjectionStore extends Table {
-    constructor(scope: Construct, projection: Type, props?: ProjectionStoreProps) {
-        super(scope, `${projection.name}Store`, {
+    constructor(scope: Construct, id: string, props?: ProjectionStoreProps) {
+        super(scope, id, {
+            tableName: id,
             partitionKey: {
                 type: AttributeType.STRING,
                 name: 'id',
@@ -18,7 +19,6 @@ export class ProjectionStore extends Table {
             },
             removalPolicy: RemovalPolicy.DESTROY,
             ...props,
-            tableName: `${projection.name}Store`,
         })
     }
 }

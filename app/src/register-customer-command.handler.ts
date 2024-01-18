@@ -2,10 +2,9 @@ import { object, Output, string } from 'valibot'
 import aggregate from '../../src/aggregate/aggregate.store'
 import { Customer } from './customer.aggregate'
 import { CommandHandler, HandleCommand } from '../../src/command'
-import { transaction } from '../../src/util/store-operations'
+import { transaction } from '../../src/util/dynamo-store-operations'
 import outbox from '../../src/outbox/outbox.store'
 import { v4 } from 'uuid'
-import { addMinutes } from 'date-fns'
 
 export class CustomerRegisteredEvent {
     constructor(
@@ -34,9 +33,6 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
 
         const event = new CustomerRegisteredEvent(customer.customerId, customer.firstName, customer.lastName)
 
-        await transaction(
-            aggregate.saveTx(customer),
-            outbox.eventTx(event, { publishAt: addMinutes(new Date(), 1).toISOString() })
-        )
+        await transaction(aggregate.saveTx(customer), outbox.eventTx(event))
     }
 }

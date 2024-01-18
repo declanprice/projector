@@ -42,17 +42,19 @@ export class CommandHandler extends NodejsFunction {
 
         const { handlerApi, commandBus, subscriptionUpdateBus, aggregateStore, outboxStore, projectionStores } = props
 
-        if (handlerApi) {
-            const metadata = getCommandHandlerProps(handler)
+        const metadata = getCommandHandlerProps(handler)
 
-            handlerApi.addRoutes({
-                path: metadata.path,
-                methods: [metadata?.method === 'PUT' ? HttpMethod.PUT : HttpMethod.POST],
-                integration: new HttpLambdaIntegration(`${handler.name}-HttpIntegration`, this),
-            })
+        if (handlerApi) {
+            if (metadata.path) {
+                handlerApi.addRoutes({
+                    path: metadata.path,
+                    methods: [metadata?.method === 'PUT' ? HttpMethod.PUT : HttpMethod.POST],
+                    integration: new HttpLambdaIntegration(`${handler.name}-HttpIntegration`, this),
+                })
+            }
         }
 
-        if (commandBus) {
+        if (commandBus && metadata.on) {
             const handlerQueue = new Queue(this, `${handler.name}-Queue`, {
                 queueName: `${handler.name}-Queue`,
             })
@@ -62,7 +64,7 @@ export class CommandHandler extends NodejsFunction {
             commandBus.addSubscription(
                 new SqsSubscription(handlerQueue, {
                     filterPolicy: {
-                        type: SubscriptionFilter.stringFilter({ allowlist: [handler.name] }),
+                        type: SubscriptionFilter.stringFilter({ allowlist: [metadata.on.name] }),
                     },
                 })
             )

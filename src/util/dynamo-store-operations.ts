@@ -3,9 +3,13 @@ import { DynamoDBClient, TransactWriteItem, TransactWriteItemsCommand } from '@a
 const client = new DynamoDBClient()
 
 export const transaction = async (...writeItems: TransactWriteItem[]) => {
-    await client.send(
+    const response = await client.send(
         new TransactWriteItemsCommand({
             TransactItems: writeItems,
         })
     )
+
+    console.log('transaction response', response)
+
+    return response
 }

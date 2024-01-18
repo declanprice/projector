@@ -43,6 +43,7 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
 
     const forwardOutboxItem = (item: OutboxItem) => {
         const message: EventBusMessage<any> | CommandBusMessage<any> = {
+            messageId: item.id,
             type: item.type,
             data: item.data,
             timestamp: item.timestamp,

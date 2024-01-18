@@ -5,7 +5,7 @@ import { RemovalPolicy } from 'aws-cdk-lib'
 type StateStoreProps = {} & Partial<TableProps>
 
 export class AggregateStore extends Table {
-    constructor(scope: Construct, id: string, props: StateStoreProps) {
+    constructor(scope: Construct, id: string, props?: StateStoreProps) {
         super(scope, id, {
             tableName: id,
             partitionKey: {
