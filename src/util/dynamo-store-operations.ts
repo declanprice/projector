@@ -1,15 +1,26 @@
-import { DynamoDBClient, TransactWriteItem, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb'
+import {
+    DynamoDBClient,
+    TransactionCanceledException,
+    TransactWriteItem,
+    TransactWriteItemsCommand,
+} from '@aws-sdk/client-dynamodb'
 
 const client = new DynamoDBClient()
 
 export const transaction = async (...writeItems: TransactWriteItem[]) => {
-    const response = await client.send(
+    return client.send(
         new TransactWriteItemsCommand({
             TransactItems: writeItems,
         })
     )
+}
 
-    console.log('transaction response', response)
+export const isConditionCheckError = (error: any): boolean => {
+    if (error instanceof TransactionCanceledException) {
+        if (error.CancellationReasons) {
+            return error.CancellationReasons.some((r) => r.Code === 'ConditionalCheckFailed')
+        }
+    }
 
-    return response
+    return false
 }

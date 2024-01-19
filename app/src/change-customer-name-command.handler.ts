@@ -1,4 +1,4 @@
-import { CommandHandler, HandleCommand } from '../../src/command'
+import { CommandBusMessage, CommandHandler, HandleCommand } from '../../src/command'
 
 export class ChangeCustomerNameCommand {
     constructor(
@@ -10,7 +10,7 @@ export class ChangeCustomerNameCommand {
 
 @CommandHandler({ on: ChangeCustomerNameCommand })
 export class ChangeCustomerNameCommandHandler implements HandleCommand {
-    async handle(command: ChangeCustomerNameCommand) {
+    async handle(command: CommandBusMessage<ChangeCustomerNameCommand>) {
         console.log('change customer name command handler invoked', command)
     }
 }

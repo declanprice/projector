@@ -3,11 +3,12 @@ import { EventBridgeEvent, SQSEvent } from 'aws-lambda'
 import { EventBusMessage } from '../event'
 import { DynamoStore } from '../util/dynamo-store'
 import { ProcessAssociationItem, ProcessItem } from './process.item'
-import { transaction } from '../util/dynamo-store-operations'
+import { isConditionCheckError, transaction } from '../util/dynamo-store-operations'
 import { ProcessContext } from './process-context'
 import { beginsWith, equals } from '@aws/dynamodb-expressions'
 import { parse } from 'valibot'
 import { EventBusMessageSchema } from '../event/event-bus-message.type'
+import { TransactionCanceledException } from '@aws-sdk/client-dynamodb'
 
 const PROCESS_STORE_NAME = process.env.PROCESS_STORE_NAME as string
 
@@ -30,7 +31,7 @@ export const processHandler = async (instance: any, props: ProcessProps, event: 
 
             const started = await startProcessIfNotExists(processId, associationId)
 
-            if (!started) {
+            if (started === null) {
                 console.log(`[SKIPPING PROCESS START] - process id ${processId} already exists.`)
             }
         }
@@ -88,7 +89,9 @@ const startProcessIfNotExists = async (processId: string, associationId: string)
         await transaction(store.createTx(processItem), store.createTx(processAssociationItem))
         return processItem
     } catch (error) {
-        console.log('transaction error', error)
-        return null
+        if (isConditionCheckError(error)) {
+            return null
+        }
+        throw error
     }
 }
