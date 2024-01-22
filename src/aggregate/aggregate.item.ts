@@ -1,13 +1,10 @@
-import { StoreItem } from '../util/dynamo-store'
+import { StoreItem } from '../store/store.item'
 
-export abstract class AggregateStoreItem extends StoreItem {
+export abstract class AggregateItem extends StoreItem {
     version: number = 0
+    type = this.constructor.name
 
-    constructor(private readonly id: string) {
+    constructor(readonly id: string) {
         super(id)
-    }
-
-    get sk(): string {
-        return this.constructor.name
     }
 }

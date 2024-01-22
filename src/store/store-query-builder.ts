@@ -10,8 +10,8 @@ import {
 } from '@aws/dynamodb-expressions'
 import { DynamoDBClient, QueryCommand, AttributeValue } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { Type } from './type'
-import { StoreItem } from './dynamo-store'
+import { Type } from '../util/type'
+import { StoreItem } from './store.item'
 
 type SortKeyCondition =
     | EqualityExpressionPredicate
@@ -22,7 +22,7 @@ type SortKeyCondition =
     | BetweenExpressionPredicate
     | BeginsWithPredicate
 
-export class DynamoQueryBuilder<I extends StoreItem> {
+export class StoreQueryBuilder<I extends StoreItem> {
     private readonly client = new DynamoDBClient()
 
     constructor(
@@ -49,17 +49,17 @@ export class DynamoQueryBuilder<I extends StoreItem> {
         expressionAttributes: new ExpressionAttributes(),
     }
 
-    using(index: string): DynamoQueryBuilder<I> {
+    using(index: string): StoreQueryBuilder<I> {
         this.query.using = index
         return this
     }
 
-    consistent(consistent: boolean): DynamoQueryBuilder<I> {
+    consistent(consistent: boolean): StoreQueryBuilder<I> {
         this.query.consistent = consistent
         return this
     }
 
-    pk(name: string, value: string | number): DynamoQueryBuilder<I> {
+    pk(name: string, value: string | number): StoreQueryBuilder<I> {
         this.query.pk = {
             name: this.query.expressionAttributes.addName(name),
             value: this.query.expressionAttributes.addValue(value),
@@ -68,7 +68,7 @@ export class DynamoQueryBuilder<I extends StoreItem> {
         return this
     }
 
-    sk(name: string, condition: SortKeyCondition): DynamoQueryBuilder<I> {
+    sk(name: string, condition: SortKeyCondition): StoreQueryBuilder<I> {
         this.query.sk = {
             name,
             condition,
@@ -77,17 +77,17 @@ export class DynamoQueryBuilder<I extends StoreItem> {
         return this
     }
 
-    limit(limit: number): DynamoQueryBuilder<I> {
+    limit(limit: number): StoreQueryBuilder<I> {
         this.query.limit = limit
         return this
     }
 
-    startAt(key: Record<string, AttributeValue>): DynamoQueryBuilder<I> {
+    startAt(key: Record<string, AttributeValue>): StoreQueryBuilder<I> {
         this.query.startAt = key
         return this
     }
 
-    sort(direction: 'asc' | 'desc'): DynamoQueryBuilder<I> {
+    sort(direction: 'asc' | 'desc'): StoreQueryBuilder<I> {
         this.query.sort = direction
         return this
     }

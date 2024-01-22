@@ -1,4 +1,4 @@
-import { StoreItem } from '../util/dynamo-store'
+import { StoreItem } from '../store/store.item'
 
 export abstract class ProjectionItem extends StoreItem {
     versions: { [name: string]: number } = {}

@@ -1,4 +1,4 @@
-import { StoreItem } from '../util/dynamo-store'
+import { StoreItem } from '../store/store.item'
 
 export class ProcessItem<Data> extends StoreItem {
     constructor(

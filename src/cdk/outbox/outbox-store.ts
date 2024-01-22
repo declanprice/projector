@@ -24,7 +24,7 @@ export class OutboxStore extends Table {
                 type: AttributeType.STRING,
             },
             sortKey: {
-                name: 'timestamp',
+                name: 'publishAt',
                 type: AttributeType.STRING,
             },
         })

@@ -13,10 +13,6 @@ export class ProjectionStore extends Table {
                 type: AttributeType.STRING,
                 name: 'id',
             },
-            sortKey: {
-                type: AttributeType.STRING,
-                name: 'type',
-            },
             removalPolicy: RemovalPolicy.DESTROY,
             ...props,
         })

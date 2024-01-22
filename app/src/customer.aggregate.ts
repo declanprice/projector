@@ -1,6 +1,6 @@
-import { AggregateStoreItem } from '../../src/aggregate/aggregate.item'
+import { AggregateItem } from '../../src/aggregate/aggregate.item'
 
-export class Customer extends AggregateStoreItem {
+export class Customer extends AggregateItem {
     constructor(
         readonly customerId: string,
         readonly firstName: string,

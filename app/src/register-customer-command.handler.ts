@@ -1,10 +1,10 @@
 import { object, Output, string } from 'valibot'
-import aggregate from '../../src/aggregate/aggregate.store'
 import { Customer } from './customer.aggregate'
 import { CommandHandler, HandleCommand } from '../../src/command'
-import { transaction } from '../../src/util/dynamo-store-operations'
-import outbox from '../../src/outbox/outbox.store'
 import { v4 } from 'uuid'
+import { Store } from '../../src/store/store'
+import { commit } from '../../src/store/store-operations'
+import { Outbox } from '../../src/outbox'
 
 export class CustomerRegisteredEvent {
     constructor(
@@ -24,9 +24,14 @@ const RegisterCustomerSchema = object({
     schema: RegisterCustomerSchema,
 })
 export class RegisterCustomerCommandHandler implements HandleCommand {
+    readonly store = new Store('Aggregates')
+    readonly outbox = new Outbox('Outbox')
+
     async handle(command: Output<typeof RegisterCustomerSchema>) {
         const customer = new Customer(v4(), 'Declan', 'Price')
 
         const event = new CustomerRegisteredEvent(customer.customerId, customer.firstName, customer.lastName)
+
+        await commit(this.store.save(customer), this.outbox.event(event))
     }
 }

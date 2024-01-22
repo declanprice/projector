@@ -1,7 +1,8 @@
 import { Process, ProcessContext, StartProcess } from '../../src/process'
 import { CustomerRegisteredEvent } from './register-customer-command.handler'
 import { ChangeCustomerNameCommand } from './change-customer-name-command.handler'
-import outbox from '../../src/outbox/outbox.store'
+import { Outbox } from '../../src/outbox'
+import { commit } from '../../src/store/store-operations'
 
 type CustomerProcessData = {
     customerId?: string
@@ -14,16 +15,18 @@ type CustomerProcessContext = ProcessContext<CustomerProcessData, CustomerRegist
     defaultKey: 'customerId',
 })
 export class CustomerProcessHandler {
+    readonly outbox = new Outbox('Outbox')
+
     @StartProcess(CustomerRegisteredEvent)
     async onRegistered(context: CustomerProcessContext) {
-        context.save({
-            customerId: context.event.customerId,
+        const { customerId } = context.event
+
+        const save = context.save({
+            customerId,
         })
 
-        context.associate('213')
+        const command = this.outbox.command(new ChangeCustomerNameCommand(customerId, 'changed', 'via-process'))
 
-        outbox.command(new ChangeCustomerNameCommand(context.event.customerId, 'changed', 'via-process'))
-
-        console.log('invoked onRegistered process handler')
+        await commit(save, command)
     }
 }

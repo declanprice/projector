@@ -1,15 +1,15 @@
 import { getProcessHandlerProps, ProcessProps } from './process.decorator'
 import { EventBridgeEvent, SQSEvent } from 'aws-lambda'
 import { EventBusMessage } from '../event'
-import { DynamoStore } from '../util/dynamo-store'
+import { Store } from '../store/store'
 import { ProcessAssociationItem, ProcessItem } from './process.item'
-import { isConditionCheckError, transaction } from '../util/dynamo-store-operations'
+import { isConditionCheckError, commit } from '../store/store-operations'
 import { ProcessContext } from './process-context'
 import { beginsWith } from '@aws/dynamodb-expressions'
 
 const PROCESS_STORE_NAME = process.env.PROCESS_STORE_NAME as string
 
-const store = new DynamoStore(PROCESS_STORE_NAME)
+const store = new Store(PROCESS_STORE_NAME)
 
 export const processHandler = async (instance: any, props: ProcessProps, event: SQSEvent) => {
     console.log('process handler', event)
@@ -71,7 +71,7 @@ const startProcessIfNotExists = async (processId: string, associationId: string)
     const processAssociationItem = new ProcessAssociationItem(processId, associationId)
 
     try {
-        await transaction(store.createTx(processItem), store.createTx(processAssociationItem))
+        await commit(store.create(processItem), store.create(processAssociationItem))
         return processItem
     } catch (error) {
         if (isConditionCheckError(error)) {

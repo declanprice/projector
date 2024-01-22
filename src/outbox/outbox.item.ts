@@ -1,3 +1,5 @@
+import { StoreItem } from '../store/store.item'
+
 export enum OutboxItemStatus {
     PENDING = 'PENDING',
     SCHEDULED = 'SCHEDULED',
@@ -10,11 +12,19 @@ export enum OutboxBusType {
     EVENT = 'EVENT',
 }
 
-export type OutboxItem = {
-    id: string
-    status: OutboxItemStatus
-    bus: OutboxBusType
-    timestamp: string
-    type: string
-    data: any
+export class OutboxItem extends StoreItem {
+    constructor(
+        readonly id: string,
+        readonly status: OutboxItemStatus,
+        readonly bus: OutboxBusType,
+        readonly publishAt: string,
+        readonly type: string,
+        readonly data: any
+    ) {
+        super(id)
+    }
+
+    fromItem(item: any): OutboxItem {
+        return new OutboxItem(item.id, item.status, item.bus, item.publishAt, item.type, item.data)
+    }
 }

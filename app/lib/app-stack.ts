@@ -39,13 +39,13 @@ export class AppStack extends cdk.Stack {
             apiName: 'RestApi',
         })
 
-        const aggregateStore = new AggregateStore(this, 'AggregateStore')
+        const aggregateStore = new AggregateStore(this, 'Aggregates')
 
-        const outboxStore = new OutboxStore(this, 'OutboxStore')
+        const outboxStore = new OutboxStore(this, 'Outbox')
 
-        const processStore = new ProcessStore(this, 'ProcessStore')
+        // const processStore = new ProcessStore(this, 'Processes')
 
-        const customerProjection = new ProjectionStore(this, 'CustomerProjectionStore')
+        // const customerProjection = new ProjectionStore(this, 'CustomerProjection')
 
         new AggregateStorePublisher(this, 'AggregateStorePublisher', {
             eventBus,
@@ -67,35 +67,35 @@ export class AppStack extends cdk.Stack {
             entry: 'src/register-customer-command.handler.ts',
         })
 
-        new CommandHandler(this, ChangeCustomerNameCommandHandler, {
-            commandBus,
-            aggregateStore,
-            outboxStore,
-            entry: 'src/change-customer-name-command.handler.ts',
-        })
+        // new CommandHandler(this, ChangeCustomerNameCommandHandler, {
+        //     commandBus,
+        //     aggregateStore,
+        //     outboxStore,
+        //     entry: 'src/change-customer-name-command.handler.ts',
+        // })
 
-        new QueryHandler(this, GetCustomerByIdQueryHandler, {
-            handlerApi,
-            projectionStores: [customerProjection],
-            entry: 'src/get-customer-by-id-query.handler.ts',
-        })
-
-        new ChangeHandler(this, CustomerProjectionChangeHandler, {
-            eventBus,
-            projectionStores: [customerProjection],
-            entry: 'src/customer-projection-change.handler.ts',
-        })
-
-        new EventHandler(this, CustomerRegisteredEventHandler, {
-            eventBus,
-            entry: 'src/customer-registered-event.handler.ts',
-        })
-
-        new ProcessHandler(this, CustomerProcessHandler, {
-            eventBus,
-            processStore,
-            outboxStore,
-            entry: 'src/customer-process.handler.ts',
-        })
+        // new QueryHandler(this, GetCustomerByIdQueryHandler, {
+        //     handlerApi,
+        //     projectionStores: [customerProjection],
+        //     entry: 'src/get-customer-by-id-query.handler.ts',
+        // })
+        //
+        // new ChangeHandler(this, CustomerProjectionChangeHandler, {
+        //     eventBus,
+        //     projectionStores: [customerProjection],
+        //     entry: 'src/customer-projection-change.handler.ts',
+        // })
+        //
+        // new EventHandler(this, CustomerRegisteredEventHandler, {
+        //     eventBus,
+        //     entry: 'src/customer-registered-event.handler.ts',
+        // })
+        //
+        // new ProcessHandler(this, CustomerProcessHandler, {
+        //     eventBus,
+        //     processStore,
+        //     outboxStore,
+        //     entry: 'src/customer-process.handler.ts',
+        // })
     }
 }

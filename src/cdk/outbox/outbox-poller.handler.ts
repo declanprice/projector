@@ -1,7 +1,7 @@
 import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb'
 import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
 import { lessThan } from '@aws/dynamodb-expressions'
-import { DynamoQueryBuilder } from '../../util/dynamo-query-builder'
+import { StoreQueryBuilder } from '../../store/store-query-builder'
 import { addMinutes } from 'date-fns'
 import { OutboxItem, OutboxItemStatus } from '../../outbox/outbox.item'
 
@@ -11,7 +11,7 @@ const sqsClient = new SQSClient()
 export const outboxPollerHandler = async () => {
     const OUTBOX_STORE_NAME = process.env.OUTBOX_STORE_NAME as string
     const OUTBOX_PUBLISHER_QUEUE_URL = process.env.OUTBOX_PUBLISHER_QUEUE_URL as string
-    const queryBuilder = new DynamoQueryBuilder<OutboxItem>(OUTBOX_STORE_NAME, dynamoClient)
+    const queryBuilder = new StoreQueryBuilder(OutboxItem, OUTBOX_STORE_NAME)
 
     const getScheduledItems = async (): Promise<OutboxItem[]> => {
         const next10Minutes = addMinutes(new Date(), 10).toISOString()
@@ -19,7 +19,7 @@ export const outboxPollerHandler = async () => {
         const result = await queryBuilder
             .using('status-index')
             .pk('status', OutboxItemStatus.SCHEDULED)
-            .sk('timestamp', lessThan(next10Minutes))
+            .sk('publishAt', lessThan(next10Minutes))
             .exec()
 
         return result.data
