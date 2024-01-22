@@ -1,6 +1,6 @@
 import { DynamoDBStreamEvent } from 'aws-lambda'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { AggregateItem } from '../../aggregate/aggregate.item'
+import { AggregateStoreItem } from '../../aggregate/aggregate.item'
 import { EventBridgeClient, PutEventsCommand, PutEventsRequestEntry } from '@aws-sdk/client-eventbridge'
 import { AttributeValue } from 'aws-lambda/trigger/dynamodb-stream'
 import { ChangeEvent, ChangeType } from '../../event'
@@ -31,14 +31,15 @@ export const aggregateStorePublisherHandler = async (event: DynamoDBStreamEvent)
             throw new Error(`[Invalid Record] - neither NewImage or OldImage was available to process. ${record}`)
         }
 
-        const data = unmarshall(image as any) as AggregateItem<any>
+        const data = unmarshall(image as any) as AggregateStoreItem
 
         const changeEvent: ChangeEvent<any> = {
-            type: data.type,
-            data: data.data,
+            id: data.pk,
+            type: data.sk,
+            change: record.eventName as ChangeType,
+            data: data,
             timestamp: data.timestamp,
             version: data.version,
-            change: record.eventName as ChangeType,
         }
 
         changeEventsToPut.push({

@@ -1,71 +1,25 @@
-import { DynamoDBClient, GetItemCommand, PutItemCommand, TransactWriteItem } from '@aws-sdk/client-dynamodb'
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
-import { getProjectionId } from './projection.decorator'
 import { Type } from '../util/type'
 import { DynamoQueryBuilder } from '../util/dynamo-query-builder'
+import { DynamoStore } from '../util/dynamo-store'
+import { ProjectionItem } from './projection.item'
 
 class ProjectionStore {
-    readonly client = new DynamoDBClient()
+    readonly store = new DynamoStore()
 
-    async get<E>(type: Type<E>, id: string): Promise<E | null> {
-        const result = await this.client.send(
-            new GetItemCommand({
-                TableName: `${type.name}Store`,
-                Key: {
-                    id: {
-                        S: id,
-                    },
-                    type: {
-                        S: type.name,
-                    },
-                },
-            })
-        )
-
-        if (!result.Item) return null
-
-        return unmarshall(result.Item) as E
+    async get<E extends ProjectionItem>(type: Type<E>, id: string): Promise<E | null> {
+        return this.store.get(type, id, type.name)
     }
 
-    query(type: Type) {
-        return new DynamoQueryBuilder(`${type.name}Store`, this.client)
+    query<I extends ProjectionItem>(type: Type<I>) {
+        return new DynamoQueryBuilder(type, type.name)
     }
 
-    async save(instance: any) {
-        const tx = this.saveTx(instance)
-
-        if (!tx.Put) throw new Error('failed to save')
-
-        await this.client.send(new PutItemCommand(tx.Put))
+    async save<I extends ProjectionItem>(item: I) {
+        return this.store.save(item)
     }
 
-    saveTx(instance: any): TransactWriteItem {
-        const idProperty = getProjectionId(instance)
-
-        if (!idProperty) {
-            throw new Error(`${instance.constructor.name} has no @AggregateId`)
-        }
-
-        const id = instance[idProperty]
-
-        if (!id) {
-            throw new Error(`id has not been set on ${instance.constructor.name} instance`)
-        }
-
-        return {
-            Put: {
-                TableName: `${instance.constructor.name}Store`,
-                Item: marshall(
-                    {
-                        id,
-                        type: instance.constructor.name,
-                        version: 1,
-                        ...instance,
-                    },
-                    { convertClassInstanceToMap: true }
-                ),
-            },
-        }
+    saveTx<I extends ProjectionItem>(item: I) {
+        return this.store.saveTx(item)
     }
 }
 

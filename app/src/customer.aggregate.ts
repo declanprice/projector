@@ -1,15 +1,15 @@
-import { Aggregate, AggregateId } from '../../src/aggregate'
+import { AggregateStoreItem } from '../../src/aggregate/aggregate.item'
 
-@Aggregate()
-export class Customer {
-    @AggregateId()
-    customerId: string
-    firstName: string
-    lastName: string
+export class Customer extends AggregateStoreItem {
+    constructor(
+        readonly customerId: string,
+        readonly firstName: string,
+        readonly lastName: string
+    ) {
+        super(customerId)
+    }
 
-    constructor(data: { customerId: string; firstName: string; lastName: string }) {
-        this.customerId = data.customerId
-        this.firstName = data.firstName
-        this.lastName = data.lastName
+    fromItem(item: any): Customer {
+        return new Customer(item.customerId, item.firstName, item.lastName)
     }
 }

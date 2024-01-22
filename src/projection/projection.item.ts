@@ -1,7 +1,7 @@
 import { StoreItem } from '../util/dynamo-store'
 
-export abstract class AggregateStoreItem extends StoreItem {
-    version: number = 0
+export abstract class ProjectionItem extends StoreItem {
+    versions: { [name: string]: number } = {}
 
     constructor(private readonly id: string) {
         super(id)

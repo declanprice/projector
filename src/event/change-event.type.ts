@@ -5,9 +5,10 @@ export enum ChangeType {
 }
 
 export type ChangeEvent<Data> = {
+    id: string
     change: ChangeType
     type: string
     data: Data
-    version: number
+    version?: number
     timestamp: string
 }

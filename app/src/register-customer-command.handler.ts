@@ -25,14 +25,8 @@ const RegisterCustomerSchema = object({
 })
 export class RegisterCustomerCommandHandler implements HandleCommand {
     async handle(command: Output<typeof RegisterCustomerSchema>) {
-        const customer = new Customer({
-            customerId: v4(),
-            firstName: 'Declan',
-            lastName: 'Price',
-        })
+        const customer = new Customer(v4(), 'Declan', 'Price')
 
         const event = new CustomerRegisteredEvent(customer.customerId, customer.firstName, customer.lastName)
-
-        await transaction(aggregate.saveTx(customer), outbox.eventTx(event))
     }
 }

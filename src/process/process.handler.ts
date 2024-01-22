@@ -1,14 +1,11 @@
-import { getProcessHandlerProps, ProcessHandlerProps, ProcessProps } from './process.decorator'
+import { getProcessHandlerProps, ProcessProps } from './process.decorator'
 import { EventBridgeEvent, SQSEvent } from 'aws-lambda'
 import { EventBusMessage } from '../event'
 import { DynamoStore } from '../util/dynamo-store'
 import { ProcessAssociationItem, ProcessItem } from './process.item'
 import { isConditionCheckError, transaction } from '../util/dynamo-store-operations'
 import { ProcessContext } from './process-context'
-import { beginsWith, equals } from '@aws/dynamodb-expressions'
-import { parse } from 'valibot'
-import { EventBusMessageSchema } from '../event/event-bus-message.type'
-import { TransactionCanceledException } from '@aws-sdk/client-dynamodb'
+import { beginsWith } from '@aws/dynamodb-expressions'
 
 const PROCESS_STORE_NAME = process.env.PROCESS_STORE_NAME as string
 
@@ -39,7 +36,7 @@ export const processHandler = async (instance: any, props: ProcessProps, event: 
         const associations = await queryAssociations(associationId)
 
         for (const association of associations) {
-            const process = await store.get<ProcessItem<any>>(association.processId, 'Process')
+            const process = await store.get(ProcessItem, association.processId, 'Process')
 
             if (!process) {
                 throw new Error(`[PROCESS NOT FOUND] - failed to find process with id ${association.processId}`)
@@ -58,7 +55,7 @@ export const processHandler = async (instance: any, props: ProcessProps, event: 
 
 const queryAssociations = async (associationId: string): Promise<ProcessAssociationItem[]> => {
     const associations = await store
-        .query<ProcessAssociationItem>()
+        .query(ProcessAssociationItem)
         .pk('pk', associationId)
         .sk('sk', beginsWith('Association|'))
         .consistent(true)
@@ -70,20 +67,8 @@ const queryAssociations = async (associationId: string): Promise<ProcessAssociat
 }
 
 const startProcessIfNotExists = async (processId: string, associationId: string): Promise<ProcessItem<any> | null> => {
-    const processItem: ProcessItem<any> = {
-        pk: processId,
-        sk: `Process`,
-        processId,
-        data: {},
-        timestamp: new Date().toISOString(),
-    }
-
-    const processAssociationItem: ProcessAssociationItem = {
-        pk: associationId,
-        sk: `Association|${processId}`,
-        processId,
-        associationId,
-    }
+    const processItem = new ProcessItem(processId, {})
+    const processAssociationItem = new ProcessAssociationItem(processId, associationId)
 
     try {
         await transaction(store.createTx(processItem), store.createTx(processAssociationItem))

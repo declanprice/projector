@@ -1,13 +1,27 @@
-import { DynamoStoreItem } from '../util/dynamo-store'
+import { StoreItem } from '../util/dynamo-store'
 
-export type ProcessItem<Data> = {
-    sk: string
-    processId: string
-    timestamp: string
-    data: Data
-} & DynamoStoreItem
+export class ProcessItem<Data> extends StoreItem {
+    constructor(
+        readonly processId: string,
+        readonly data: Data
+    ) {
+        super(processId, 'PROCESS')
+    }
 
-export type ProcessAssociationItem = {
-    associationId: string
-    processId: string
-} & DynamoStoreItem
+    fromItem(item: any): any {
+        return new ProcessItem(item.processId, item.data)
+    }
+}
+
+export class ProcessAssociationItem extends StoreItem {
+    constructor(
+        readonly processId: string,
+        readonly associationId: string
+    ) {
+        super(associationId, `Association|${processId}`)
+    }
+
+    fromItem(item: any): any {
+        return new ProcessItem(item.processId, item.associationId)
+    }
+}
