@@ -1,7 +1,14 @@
 import { DynamoDBStreamEvent } from 'aws-lambda'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { ScheduledItem } from '../../store/scheduler/scheduled.item'
-import { SchedulerClient, CreateScheduleCommand } from '@aws-sdk/client-scheduler'
+import {
+    SchedulerClient,
+    FlexibleTimeWindowMode,
+    CreateScheduleCommand,
+    DeleteScheduleCommand,
+} from '@aws-sdk/client-scheduler'
+import { format } from 'date-fns'
+import { ResourceNotFoundException } from '@aws-sdk/client-scheduler'
 
 const client = new SchedulerClient()
 
@@ -10,14 +17,20 @@ const SCHEDULER_ROLE_ARN = process.env.SCHEDULER_ROLE_ARN as string
 
 export const schedulerPublisherHandler = async (event: DynamoDBStreamEvent) => {
     for (const record of event.Records) {
+        if (record.eventName === 'MODIFY') {
+            console.log(`[IGNORING MODIFY EVENT]`)
+            continue
+        }
+
         if (record.eventName === 'INSERT' && record.dynamodb?.NewImage) {
             const item = unmarshall(record.dynamodb.NewImage as any) as ScheduledItem
+            const scheduledAt = format(item.scheduledAt, `yyyy-MM-dd'T'HH:mm:ss`)
             console.log(`[INSERT EVENT] - ${item}`)
             await client.send(
                 new CreateScheduleCommand({
                     Name: item.id,
                     GroupName: 'default',
-                    ScheduleExpression: 'at(2024-01-23T16:00:00)',
+                    ScheduleExpression: `at(${scheduledAt})`,
                     Target: {
                         Arn: EVENT_BUS_ARN,
                         RoleArn: SCHEDULER_ROLE_ARN,
@@ -27,19 +40,30 @@ export const schedulerPublisherHandler = async (event: DynamoDBStreamEvent) => {
                         },
                         Input: JSON.stringify(item.data),
                     },
-                    FlexibleTimeWindow: undefined,
+                    FlexibleTimeWindow: {
+                        Mode: FlexibleTimeWindowMode.OFF,
+                    },
                 })
             )
-        }
-
-        if (record.eventName === 'MODIFY' && record.dynamodb?.OldImage) {
-            const item = unmarshall(record.dynamodb.NewImage as any) as ScheduledItem
-            console.log(`[MODIFY EVENT] - ${item}`)
         }
 
         if (record.eventName === 'REMOVE' && record.dynamodb?.OldImage) {
             const item = unmarshall(record.dynamodb.OldImage as any) as ScheduledItem
             console.log(`[REMOVE EVENT] - ${item}`)
+            try {
+                await client.send(
+                    new DeleteScheduleCommand({
+                        Name: item.id,
+                    })
+                )
+            } catch (error) {
+                if (error instanceof ResourceNotFoundException) {
+                    console.log(`[SCHEDULE NOT FOUND] - ${item.id}`)
+                    continue
+                }
+
+                throw error
+            }
         }
     }
 }

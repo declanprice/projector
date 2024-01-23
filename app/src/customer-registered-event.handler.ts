@@ -14,7 +14,7 @@ export class CustomerRegisteredEvent extends EventItem {
 @EventHandlerGroup({
     batchSize: 10,
 })
-export class CustomerDeadlineHandler {
+export class CustomerRegisteredEventHandler {
     @EventHandler(CustomerRegisteredEvent)
     onRegistered(event: EventBusMessage<CustomerRegisteredEvent>) {
         console.log('handling customer registered event', event)

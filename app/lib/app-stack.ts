@@ -10,8 +10,10 @@ import {
     CommandHandler,
     SchedulerStore,
     SchedulerStorePublisher,
+    EventHandler,
 } from '../../src/cdk'
 import { RegisterCustomerCommandHandler } from '../src/register-customer-command.handler'
+import { CustomerRegisteredEventHandler } from '../src/customer-registered-event.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -49,6 +51,7 @@ export class AppStack extends cdk.Stack {
         new CommandHandler(this, RegisterCustomerCommandHandler, {
             handlerApi,
             aggregateStore,
+            schedulerStore,
             outboxStore,
             entry: 'src/register-customer-command.handler.ts',
         })
@@ -72,9 +75,10 @@ export class AppStack extends cdk.Stack {
         //     entry: 'src/customer-projection-change.handler.ts',
         // })
         //
-        // new EventHandler(this, CustomerRegisteredEventHandler, {
-        //     eventBus,
-        //     entry: 'src/customer-registered-event.handler.ts',
-        // })
+
+        new EventHandler(this, CustomerRegisteredEventHandler, {
+            eventBus,
+            entry: 'src/customer-registered-event.handler.ts',
+        })
     }
 }

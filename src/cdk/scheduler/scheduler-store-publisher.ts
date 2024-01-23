@@ -1,19 +1,20 @@
 import { Construct } from 'constructs'
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { SchedulerStore } from './scheduler-store'
-import { Duration } from 'aws-cdk-lib'
-import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
+import { Duration, Stack } from 'aws-cdk-lib'
+import { DynamoEventSource, SqsDlq } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { EventBus } from '../event'
 import { Effect, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
+import { Queue } from 'aws-cdk-lib/aws-sqs'
 
-type OutboxPublisherProps = {
+type SchedulerStorePublisherProps = {
     eventBus: EventBus
     schedulerStore: SchedulerStore
 } & Partial<NodejsFunctionProps>
 
 export class SchedulerStorePublisher extends NodejsFunction {
-    constructor(scope: Construct, id: string, props: OutboxPublisherProps) {
+    constructor(scope: Construct, id: string, props: SchedulerStorePublisherProps) {
         super(scope, id, {
             functionName: id,
             timeout: Duration.seconds(10),
@@ -23,6 +24,20 @@ export class SchedulerStorePublisher extends NodejsFunction {
             environment: {
                 EVENT_BUS_ARN: props.eventBus.eventBusArn,
             },
+            initialPolicy: [
+                new PolicyStatement({
+                    effect: Effect.ALLOW,
+                    resources: [
+                        `arn:aws:scheduler:${Stack.of(scope).region}:${Stack.of(scope).account}:schedule/default/*`,
+                    ],
+                    actions: ['scheduler:CreateSchedule', 'scheduler:UpdateSchedule', 'scheduler:DeleteSchedule'],
+                }),
+                new PolicyStatement({
+                    effect: Effect.ALLOW,
+                    resources: ['arn:aws:iam::518424097895:role/SchedulerRole'],
+                    actions: ['iam:PassRole'],
+                }),
+            ],
             ...props,
         })
 
@@ -54,6 +69,7 @@ export class SchedulerStorePublisher extends NodejsFunction {
             new DynamoEventSource(schedulerStore, {
                 batchSize: 10,
                 startingPosition: StartingPosition.LATEST,
+                bisectBatchOnError: true,
             })
         )
     }
