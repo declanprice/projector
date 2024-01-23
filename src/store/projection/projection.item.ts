@@ -1,9 +1,9 @@
-import { StoreItem } from '../store/store.item'
+import { StoreItem } from '../store.item'
 
 export abstract class ProjectionItem extends StoreItem {
     versions: { [name: string]: number } = {}
 
-    constructor(private readonly id: string) {
+    constructor(readonly id: string) {
         super(id)
     }
 

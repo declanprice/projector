@@ -13,10 +13,10 @@ import { StoreItem } from './store.item'
 export class Store {
     private readonly client = new DynamoDBClient()
 
-    constructor(private readonly tableName?: string) {}
+    constructor(private readonly tableName: string) {}
 
     query<I extends StoreItem>(type: Type<I>): StoreQueryBuilder<I> {
-        return new StoreQueryBuilder<I>(type, this?.tableName ?? type.name)
+        return new StoreQueryBuilder<I>(type, this.tableName)
     }
 
     async get<I extends StoreItem>(type: Type<I>, pk: string, sk?: string | number): Promise<I | null> {
@@ -44,7 +44,7 @@ export class Store {
     create<I extends StoreItem>(item: I): TransactWriteItem {
         return {
             Put: {
-                TableName: this?.tableName ?? item.constructor.name,
+                TableName: this.tableName,
                 Item: marshall(
                     {
                         ...item,
@@ -61,7 +61,7 @@ export class Store {
     save<I extends StoreItem>(item: I): TransactWriteItem {
         return {
             Put: {
-                TableName: this?.tableName ?? item.constructor.name,
+                TableName: this.tableName,
                 Item: marshall(
                     {
                         ...item,
@@ -74,10 +74,10 @@ export class Store {
         }
     }
 
-    delete<I extends StoreItem>(type: Type<I>, pk: string, sk?: string | number): TransactWriteItem {
+    delete<I extends StoreItem>(pk: string, sk?: string | number): TransactWriteItem {
         return {
             Delete: {
-                TableName: this?.tableName ?? type.name,
+                TableName: this.tableName,
                 Key: marshall(
                     {
                         pk,

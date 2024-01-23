@@ -2,17 +2,17 @@ import { AttributeType, StreamViewType, Table, TableProps } from 'aws-cdk-lib/aw
 import { Construct } from 'constructs'
 import { RemovalPolicy } from 'aws-cdk-lib'
 
-type OutboxStoreProps = {} & Partial<TableProps>
+type SchedulerStoreProps = {} & Partial<TableProps>
 
-export class OutboxStore extends Table {
-    constructor(scope: Construct, id: string, props?: OutboxStoreProps) {
+export class SchedulerStore extends Table {
+    constructor(scope: Construct, id: string, props?: SchedulerStoreProps) {
         super(scope, id, {
             tableName: id,
             partitionKey: {
                 type: AttributeType.STRING,
                 name: 'id',
             },
-            stream: StreamViewType.NEW_IMAGE,
+            stream: StreamViewType.NEW_AND_OLD_IMAGES,
             removalPolicy: RemovalPolicy.DESTROY,
             ...props,
         })

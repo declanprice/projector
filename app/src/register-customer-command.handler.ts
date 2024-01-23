@@ -1,18 +1,13 @@
 import { object, Output, string } from 'valibot'
+import { v4 } from 'uuid'
+import { addMinutes } from 'date-fns'
 import { Customer } from './customer.aggregate'
 import { CommandHandler, HandleCommand } from '../../src/command'
-import { v4 } from 'uuid'
 import { Store } from '../../src/store/store'
 import { commit } from '../../src/store/store-operations'
-import { Outbox } from '../../src/outbox'
-
-export class CustomerRegisteredEvent {
-    constructor(
-        readonly customerId: string,
-        readonly firstName: string,
-        readonly lastName: string
-    ) {}
-}
+import { SchedulerStore } from '../../src/store/scheduler/scheduler.store'
+import { OutboxStore } from '../../src/store/outbox/outbox.store'
+import { CustomerRegisteredEvent } from './customer-registered-event.handler'
 
 const RegisterCustomerSchema = object({
     firstName: string(),
@@ -25,13 +20,19 @@ const RegisterCustomerSchema = object({
 })
 export class RegisterCustomerCommandHandler implements HandleCommand {
     readonly store = new Store('Aggregates')
-    readonly outbox = new Outbox('Outbox')
+    readonly scheduler = new SchedulerStore('Scheduler')
+    readonly outbox = new OutboxStore('Outbox')
 
     async handle(command: Output<typeof RegisterCustomerSchema>) {
-        const customer = new Customer(v4(), 'Declan', 'Price')
+        const customerId = v4()
+        const scheduledTaskId = v4()
 
-        const event = new CustomerRegisteredEvent(customer.customerId, customer.firstName, customer.lastName)
+        const customer = new Customer(customerId, 'Declan', 'Price', scheduledTaskId)
+        const event = new CustomerRegisteredEvent(customer.customerId)
 
-        await commit(this.store.save(customer), this.outbox.event(event))
+        await commit(
+            this.store.save(customer),
+            this.scheduler.schedule(scheduledTaskId, event, addMinutes(new Date(), 10))
+        )
     }
 }

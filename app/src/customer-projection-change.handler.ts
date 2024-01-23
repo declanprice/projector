@@ -13,25 +13,20 @@ export class CustomerProjectionChangeHandler {
     @ChangeHandler(Customer, ChangeType.INSERT)
     async onCreate(change: ChangeEvent<Customer>) {
         console.log('INSERT CHANGE', change)
-
-        await commit(
-            this.store.save(new CustomerProjection(change.data.customerId, change.data.firstName, change.data.lastName))
-        )
+        const projection = new CustomerProjection(change.data.customerId, change.data.firstName, change.data.lastName)
+        await commit(this.store.save(projection))
     }
 
     @ChangeHandler(Customer, ChangeType.MODIFY)
     async onUpdate(change: ChangeEvent<Customer>) {
         console.log('MODIFY CHANGE', change)
-
-        await commit(
-            this.store.save(new CustomerProjection(change.data.customerId, change.data.firstName, change.data.lastName))
-        )
+        const projection = new CustomerProjection(change.data.customerId, change.data.firstName, change.data.lastName)
+        await commit(this.store.save(projection))
     }
 
     @ChangeHandler(Customer, ChangeType.REMOVE)
     async onDelete(change: ChangeEvent<Customer>) {
         console.log('REMOVE CHANGE', change)
-
-        await commit(this.store.delete(CustomerProjection, change.data.customerId))
+        await commit(this.store.delete(change.data.customerId))
     }
 }

@@ -2,15 +2,11 @@ import { Construct } from 'constructs'
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { OutboxStore } from './outbox-store'
 import { Duration } from 'aws-cdk-lib'
-import { OutboxPublisherQueue } from './outbox-publisher-queue'
-import { DynamoEventSource, SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
+import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
-import { CommandBus } from '../command'
 import { EventBus } from '../event'
-import { OutboxStorePoller } from './outbox-store-poller'
 
 type OutboxPublisherProps = {
-    commandBus: CommandBus
     eventBus: EventBus
     outboxStore: OutboxStore
 } & Partial<NodejsFunctionProps>
@@ -25,15 +21,12 @@ export class OutboxStorePublisher extends NodejsFunction {
             handler: 'outboxPublisherHandler',
             environment: {
                 OUTBOX_STORE_NAME: props.outboxStore.tableName,
-                COMMAND_BUS_ARN: props.commandBus.topicArn,
                 EVENT_BUS_NAME: props.eventBus.eventBusName,
             },
             ...props,
         })
 
-        const { outboxStore, commandBus, eventBus } = props
-
-        commandBus.grantPublish(this)
+        const { outboxStore, eventBus } = props
 
         eventBus.grantPutEventsTo(this)
 
@@ -45,14 +38,5 @@ export class OutboxStorePublisher extends NodejsFunction {
                 startingPosition: StartingPosition.LATEST,
             })
         )
-
-        const outboxPublisherQueue = new OutboxPublisherQueue(this, `${id}-Queue`)
-
-        this.addEventSource(new SqsEventSource(outboxPublisherQueue, { batchSize: 10 }))
-
-        new OutboxStorePoller(this, `${id}-Poller`, {
-            outboxStore,
-            outboxPublisherQueue,
-        })
     }
 }

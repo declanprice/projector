@@ -7,7 +7,6 @@ import { Type } from '../util/type'
 const COMMAND_HANDLER_METADATA = symbol('COMMAND_HANDLER_METADATA')
 
 type CommandHandlerDecoratorProps = {
-    on?: Type
     path?: string
     method?: 'POST' | 'PUT'
     schema?: ObjectSchema<any>

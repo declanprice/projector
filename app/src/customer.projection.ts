@@ -1,4 +1,4 @@
-import { ProjectionItem } from '../../src/projection/projection.item'
+import { ProjectionItem } from '../../src/store/projection/projection.item'
 
 export class CustomerProjection extends ProjectionItem {
     constructor(

@@ -1,6 +1,6 @@
 import { DynamoDBStreamEvent } from 'aws-lambda'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { AggregateItem } from '../../aggregate/aggregate.item'
+import { AggregateItem } from '../../store/aggregate/aggregate.item'
 import { EventBridgeClient, PutEventsCommand, PutEventsRequestEntry } from '@aws-sdk/client-eventbridge'
 import { AttributeValue } from 'aws-lambda/trigger/dynamodb-stream'
 import { ChangeEvent, ChangeType } from '../../event'

@@ -1,72 +1,34 @@
 import { DynamoDBStreamEvent } from 'aws-lambda'
 import { EventBridgeClient, PutEventsCommand, PutEventsRequestEntry } from '@aws-sdk/client-eventbridge'
-import { PublishBatchCommand, PublishBatchRequestEntry, SNSClient } from '@aws-sdk/client-sns'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { DynamoDBClient, GetItemCommand, TransactWriteItem, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb'
-import { v4 } from 'uuid'
-import { OutboxBusType, OutboxItem, OutboxItemStatus } from '../../outbox/outbox.item'
+import { DynamoDBClient, TransactWriteItem, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb'
+import { OutboxItem, OutboxItemStatus } from '../../store/outbox/outbox.item'
 import { EventBusMessage } from '../../event'
-import { CommandBusMessage } from '../../command'
-import { isDynamoRecord } from '../../util/is-dynamo-record'
-import { isSqsRecord } from '../../util/is-sqs-event'
 
 const eventBridgeClient = new EventBridgeClient()
-const snsClient = new SNSClient()
 const dynamoClient = new DynamoDBClient()
 
 export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
     const OUTBOX_STORE_NAME = process.env.OUTBOX_STORE_NAME as string
-    const COMMAND_BUS_ARN = process.env.COMMAND_BUS_ARN as string
     const EVENT_BUS_NAME = process.env.EVENT_BUS_NAME as string
 
     const eventsToPut: PutEventsRequestEntry[] = []
-    const commandsToPublish: PublishBatchRequestEntry[] = []
     const outboxItemsToUpdate: TransactWriteItem[] = []
 
-    const getOutboxItem = async (id: string): Promise<OutboxItem | null> => {
-        const response = await dynamoClient.send(
-            new GetItemCommand({
-                TableName: OUTBOX_STORE_NAME,
-                Key: {
-                    id: {
-                        S: id,
-                    },
-                },
-                ConsistentRead: true,
-            })
-        )
-
-        if (!response.Item) return null
-
-        return unmarshall(response.Item) as OutboxItem
-    }
-
     const forwardOutboxItem = (item: OutboxItem) => {
-        const message: EventBusMessage<any> | CommandBusMessage<any> = {
+        const message: EventBusMessage<any> = {
             messageId: item.id,
-            type: item.type,
-            data: item.data,
+            type: item.event.type,
+            data: item.event,
             timestamp: item.timestamp,
         }
 
-        if (item.bus === OutboxBusType.EVENT) {
-            eventsToPut.push({
-                EventBusName: EVENT_BUS_NAME,
-                DetailType: 'EVENT',
-                Source: 'OutboxPublisher',
-                Detail: JSON.stringify(message),
-            })
-        }
-
-        if (item.bus === OutboxBusType.COMMAND) {
-            commandsToPublish.push({
-                Id: v4(),
-                MessageAttributes: {
-                    type: { StringValue: message.type, DataType: 'String' },
-                },
-                Message: JSON.stringify(message),
-            })
-        }
+        eventsToPut.push({
+            EventBusName: EVENT_BUS_NAME,
+            DetailType: 'EVENT',
+            Source: 'OutboxPublisher',
+            Detail: JSON.stringify(message),
+        })
 
         outboxItemsToUpdate.push({
             Update: {
@@ -90,42 +52,19 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
     }
 
     for (const record of event.Records) {
-        let item: OutboxItem | null = null
-
-        if (isSqsRecord(record)) {
-            const item = JSON.parse(record.body) as OutboxItem
-
-            const itemFromStore = await getOutboxItem(item.id)
-
-            if (itemFromStore && itemFromStore.status === OutboxItemStatus.SCHEDULED_IN_QUEUE) {
-                forwardOutboxItem(item)
-            } else {
-                console.log(
-                    `item with id ${item.id} status is not ${OutboxItemStatus.SCHEDULED_IN_QUEUE}, ignoring item`
-                )
-            }
+        if (record.eventName === 'REMOVE' || record.eventName === 'MODIFY') {
+            console.log(`[IGNORING RECORD] - record is type ${record.eventName}.`)
+            continue
         }
 
-        if (isDynamoRecord(record)) {
-            if (record.eventName === 'REMOVE' || record.eventName === 'MODIFY') {
-                console.log(`record is type ${record.eventName}, ignoring record`)
-                continue
-            }
-
-            if (record.eventName === 'INSERT' && record.dynamodb?.NewImage) {
-                item = unmarshall(record.dynamodb.NewImage as any) as OutboxItem
-
-                if (item.status === OutboxItemStatus.PENDING) {
-                    forwardOutboxItem(item)
-                } else {
-                    console.log(`item status is ${item.status}, ignoring item ${JSON.stringify(item, null, 2)}`)
-                }
-            }
+        if (record.eventName === 'INSERT' && record.dynamodb?.NewImage) {
+            const item = unmarshall(record.dynamodb.NewImage as any) as OutboxItem
+            forwardOutboxItem(item)
         }
     }
 
     if (eventsToPut.length) {
-        console.log('eventsToPut', eventsToPut)
+        console.log('[EVENTS TO PUT] -', eventsToPut)
 
         const response = await eventBridgeClient.send(
             new PutEventsCommand({
@@ -133,24 +72,11 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
             })
         )
 
-        console.log('eventsResponse', response)
-    }
-
-    if (commandsToPublish.length) {
-        console.log('commandsToPublish', commandsToPublish)
-
-        const response = await snsClient.send(
-            new PublishBatchCommand({
-                TopicArn: COMMAND_BUS_ARN,
-                PublishBatchRequestEntries: commandsToPublish,
-            })
-        )
-
-        console.log('commandsResponse', response)
+        console.log('[PUT RESPONSE] - ', response)
     }
 
     if (outboxItemsToUpdate.length) {
-        console.log('outboxItemsToUpdate', outboxItemsToUpdate)
+        console.log('[OUTBOX ITEMS TO UPDATE] - ', outboxItemsToUpdate)
 
         const response = await dynamoClient.send(
             new TransactWriteItemsCommand({
@@ -158,6 +84,6 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
             })
         )
 
-        console.log('outboxItemsToUpdateResponse', response)
+        console.log('[UPDATE RESPONSE]', response)
     }
 }

@@ -2,10 +2,6 @@ import { Duration } from 'aws-cdk-lib'
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Construct } from 'constructs'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
-import { SqsSubscription } from 'aws-cdk-lib/aws-sns-subscriptions'
-import { SubscriptionFilter } from 'aws-cdk-lib/aws-sns'
-import { Queue } from 'aws-cdk-lib/aws-sqs'
-import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2'
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'
 import { AggregateStore } from '../aggregate'
@@ -13,15 +9,15 @@ import { OutboxStore } from '../outbox'
 import { SubscriptionUpdateBus } from '../subscription/subscription-update-bus'
 import { HandleCommand, getCommandHandlerProps } from '../../command'
 import { HandlerApi } from '../handler-api'
-import { CommandBus } from './command-bus'
 import { ProjectionStore } from '../projection'
+import { SchedulerStore } from '../scheduler'
 
 type CommandHandlerProps = {
     handlerApi?: HandlerApi
-    commandBus?: CommandBus
     subscriptionUpdateBus?: SubscriptionUpdateBus
     aggregateStore?: AggregateStore
     outboxStore?: OutboxStore
+    schedulerStore?: SchedulerStore
     projectionStores?: ProjectionStore[]
     entry: string
 } & Partial<NodejsFunctionProps>
@@ -40,7 +36,8 @@ export class CommandHandler extends NodejsFunction {
             ...props,
         })
 
-        const { handlerApi, commandBus, subscriptionUpdateBus, aggregateStore, outboxStore, projectionStores } = props
+        const { handlerApi, subscriptionUpdateBus, aggregateStore, outboxStore, schedulerStore, projectionStores } =
+            props
 
         const metadata = getCommandHandlerProps(handler)
 
@@ -54,22 +51,6 @@ export class CommandHandler extends NodejsFunction {
             }
         }
 
-        if (commandBus && metadata.on) {
-            const handlerQueue = new Queue(this, `${handler.name}-Queue`, {
-                queueName: `${handler.name}-Queue`,
-            })
-
-            this.addEventSource(new SqsEventSource(handlerQueue, { batchSize: 10 }))
-
-            commandBus.addSubscription(
-                new SqsSubscription(handlerQueue, {
-                    filterPolicy: {
-                        type: SubscriptionFilter.stringFilter({ allowlist: [metadata.on.name] }),
-                    },
-                })
-            )
-        }
-
         if (subscriptionUpdateBus) {
             subscriptionUpdateBus.grantPublish(this)
             this.addEnvironment('SUBSCRIPTION_BUS_ARN', subscriptionUpdateBus.topicArn)
@@ -78,6 +59,11 @@ export class CommandHandler extends NodejsFunction {
         if (aggregateStore) {
             aggregateStore.grantReadWriteData(this)
             this.addEnvironment('AGGREGATE_STORE_NAME', aggregateStore.tableName)
+        }
+
+        if (schedulerStore) {
+            schedulerStore.grantWriteData(this)
+            this.addEnvironment('SCHEDULER_STORE_NAME', schedulerStore.tableName)
         }
 
         if (outboxStore) {
