@@ -1,34 +1,35 @@
 import { SubscriptionHandlerProps } from './subscription-handler.decorator'
-import { APIGatewayProxyEventV2, SQSEvent } from 'aws-lambda'
+import { APIGatewayProxyEventV2 } from 'aws-lambda'
 import { SNSEvent } from 'aws-lambda/trigger/sns'
+import { SubscriptionItem } from '../store/subscription/subscription.item'
 
-export type HandleSubscription = {
-    onAdd: () => Promise<any>
-    onRemove: () => Promise<any>
-    filter?: (update: any, connection: any) => boolean
-    handle: (update: any) => Promise<any>
+export type HandleSubscription<Update, Filter> = {
+    onAdd: (connection: Filter) => Promise<any>
+    onRemove: (connection: Filter) => Promise<any>
+    filter?: (update: Update, connection: Filter) => boolean
+    handle: (update: Update) => Promise<any>
 }
 
 export const addSubscriptionHandler = async (
-    instance: HandleSubscription,
+    instance: HandleSubscription<any, any>,
     props: SubscriptionHandlerProps,
     event: APIGatewayProxyEventV2
 ) => {
     console.log('subscription add handler')
-    await instance.onAdd()
+    await instance.onAdd({} as any)
 }
 
 export const removeSubscriptionHandler = async (
-    instance: HandleSubscription,
+    instance: HandleSubscription<any, any>,
     props: SubscriptionHandlerProps,
     event: APIGatewayProxyEventV2
 ) => {
     console.log('subscription remove handler')
-    await instance.onRemove()
+    await instance.onRemove({} as any)
 }
 
 export const subscriptionHandler = async (
-    instance: HandleSubscription,
+    instance: HandleSubscription<any, any>,
     props: SubscriptionHandlerProps,
     event: SNSEvent
 ) => {

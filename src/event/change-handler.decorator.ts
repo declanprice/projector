@@ -1,10 +1,10 @@
 import { SQSEvent } from 'aws-lambda'
-import { eventHandler } from './event.handler'
 import { Type } from '../util/type'
 import { symbol } from 'valibot'
 import 'reflect-metadata'
 import { ChangeType } from './change-event.type'
 import { changeHandler } from './change.handler'
+import { AggregateItem } from '../store/aggregate/aggregate.item'
 
 const CHANGE_HANDLER_GROUP = symbol('CHANGE_HANDLER_GROUP')
 
@@ -36,7 +36,7 @@ export const getChangeHandlerGroupProps = (target: any): ChangeHandlerGroupProps
     return Reflect.getMetadata(CHANGE_HANDLER_GROUP, target)
 }
 
-export const ChangeHandler = (type: Type, change: ChangeType): MethodDecorator => {
+export const ChangeHandler = (type: Type<AggregateItem>, change: ChangeType): MethodDecorator => {
     return (target: any, propertyKey: string | symbol) => {
         Reflect.defineMetadata(`${type.name}-${change}`, propertyKey, target.constructor)
 

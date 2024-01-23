@@ -5,10 +5,13 @@ import { subscriptionHandler } from './subscription.handler'
 import { isHttpEvent } from '../util/is-http-event'
 import { SNSEvent } from 'aws-lambda/trigger/sns'
 import { isSnsEvent } from '../util/is-sns-event'
+import { Type } from '../util/type'
 
 const SUBSCRIPTION_HANDLER_METADATA = symbol('SUBSCRIPTION_HANDLER_METADATA')
 
 export type SubscriptionHandlerProps = {
+    on: Type
+    lookupKey: string
     route: string
     schema?: ObjectSchema<any>
 }

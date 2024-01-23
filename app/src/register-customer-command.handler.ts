@@ -30,9 +30,6 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
         const customer = new Customer(customerId, 'Declan', 'Price', scheduledTaskId)
         const event = new CustomerRegisteredEvent(customer.customerId)
 
-        await commit(
-            this.store.save(customer),
-            this.scheduler.schedule(scheduledTaskId, event, addMinutes(new Date(), 10))
-        )
+        await commit(this.store.save(customer), this.outbox.publish(event))
     }
 }

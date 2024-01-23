@@ -23,9 +23,9 @@ export const schedulerPublisherHandler = async (event: DynamoDBStreamEvent) => {
         }
 
         if (record.eventName === 'INSERT' && record.dynamodb?.NewImage) {
+            console.log(`[INSERT EVENT]`)
             const item = unmarshall(record.dynamodb.NewImage as any) as ScheduledItem
             const scheduledAt = format(item.scheduledAt, `yyyy-MM-dd'T'HH:mm:ss`)
-            console.log(`[INSERT EVENT] - ${item}`)
             await client.send(
                 new CreateScheduleCommand({
                     Name: item.id,
@@ -48,8 +48,8 @@ export const schedulerPublisherHandler = async (event: DynamoDBStreamEvent) => {
         }
 
         if (record.eventName === 'REMOVE' && record.dynamodb?.OldImage) {
+            console.log(`[REMOVE EVENT]`)
             const item = unmarshall(record.dynamodb.OldImage as any) as ScheduledItem
-            console.log(`[REMOVE EVENT] - ${item}`)
             try {
                 await client.send(
                     new DeleteScheduleCommand({

@@ -53,7 +53,7 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
 
     for (const record of event.Records) {
         if (record.eventName === 'REMOVE' || record.eventName === 'MODIFY') {
-            console.log(`[IGNORING RECORD] - record is type ${record.eventName}.`)
+            console.log(`[IGNORING REMOVE / MODIFY EVENT]`)
             continue
         }
 

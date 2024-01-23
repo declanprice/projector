@@ -3,6 +3,7 @@ import { eventHandler } from './event.handler'
 import { Type } from '../util/type'
 import { symbol } from 'valibot'
 import 'reflect-metadata'
+import { EventItem } from '../store/event/event.item'
 
 const EVENT_HANDLER_GROUP = symbol('EVENT_HANDLER_GROUP')
 
@@ -34,7 +35,7 @@ export const getEventHandlerGroupProps = (target: any): EventHandlerProps => {
     return Reflect.getMetadata(EVENT_HANDLER_GROUP, target)
 }
 
-export const EventHandler = (event: Type): MethodDecorator => {
+export const EventHandler = (event: Type<EventItem>): MethodDecorator => {
     return (target: any, propertyKey: string | symbol) => {
         Reflect.defineMetadata(event.name, propertyKey, target.constructor)
 
