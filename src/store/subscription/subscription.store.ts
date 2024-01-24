@@ -1,7 +1,9 @@
-class SubscriptionStore {
-    async emit() {}
+import { Store } from '../store'
+
+export class SubscriptionStore {
+    readonly store = new Store(process.env.SUBSCRIPTION_STORE_NAME as string)
+
+    async add() {}
+
+    async remove() {}
 }
-
-const subscription = new SubscriptionStore()
-
-export default subscription

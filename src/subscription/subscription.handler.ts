@@ -1,20 +1,26 @@
 import { SubscriptionHandlerProps } from './subscription-handler.decorator'
-import { APIGatewayProxyEventV2 } from 'aws-lambda'
+import { APIGatewayProxyEvent } from 'aws-lambda'
 import { SNSEvent } from 'aws-lambda/trigger/sns'
 import { parse } from 'valibot'
+import { SubscriptionStore } from '../store/subscription/subscription.store'
 
 export type HandleSubscription<Update, Filter> = {
-    onAdd?: () => Promise<any>
-    onRemove?: () => Promise<any>
+    onSub?: () => Promise<any>
+    onUnsub?: () => Promise<any>
     filter?: (update: Update, filter: Filter) => boolean
     handle: (update: Update) => Promise<any>
 }
 
+const store = new SubscriptionStore()
+
 export const addSubscriptionHandler = async (
     instance: HandleSubscription<any, any>,
     props: SubscriptionHandlerProps,
-    event: APIGatewayProxyEventV2
+    event: APIGatewayProxyEvent
 ) => {
+    const connectionId = event.requestContext.connectionId!
+    const claims = event.requestContext.authorizer?.claims || {}
+
     let parsedFilter: any
 
     if (props.filterSchema) {
@@ -29,8 +35,15 @@ export const addSubscriptionHandler = async (
         }
     }
 
-    if (instance.onAdd) {
-        await instance.onAdd()
+    try {
+        if (instance.onSub) {
+            await instance.onSub()
+        }
+    } catch (error) {
+        return {
+            statusCode: 400,
+            body: 'onSub guard failed.',
+        }
     }
 
     return {
@@ -42,12 +55,12 @@ export const addSubscriptionHandler = async (
 export const removeSubscriptionHandler = async (
     instance: HandleSubscription<any, any>,
     props: SubscriptionHandlerProps,
-    event: APIGatewayProxyEventV2
+    event: APIGatewayProxyEvent
 ) => {
     console.log('subscription remove handler')
 
-    if (instance.onRemove) {
-        await instance.onRemove()
+    if (instance.onUnsub) {
+        await instance.onUnsub()
     }
 
     return {

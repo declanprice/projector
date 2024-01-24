@@ -1,5 +1,5 @@
 import { ObjectSchema, symbol } from 'valibot'
-import { APIGatewayProxyEventV2 } from 'aws-lambda'
+import { APIGatewayProxyEvent, APIGatewayProxyEventV2 } from 'aws-lambda'
 import 'reflect-metadata'
 import { addSubscriptionHandler, removeSubscriptionHandler, subscriptionHandler } from './subscription.handler'
 import { isHttpEvent } from '../util/is-http-event'
@@ -20,18 +20,18 @@ export const SubscriptionHandler = (props: SubscriptionHandlerProps): ClassDecor
     return (constructor: any) => {
         Reflect.defineMetadata(SUBSCRIPTION_HANDLER_METADATA, props, constructor)
 
-        constructor.prototype.subscriptionHandler = async (event: APIGatewayProxyEventV2 | SNSEvent) => {
+        constructor.prototype.subscriptionHandler = async (event: APIGatewayProxyEvent | SNSEvent) => {
             const instance = new constructor()
 
             if (isHttpEvent(event)) {
                 console.log(`[HTTP EVENT] - ${JSON.stringify(event, null, 2)}`)
 
                 if (event.requestContext.routeKey === `${props.route}.sub`) {
-                    return addSubscriptionHandler(instance, props, event)
+                    return addSubscriptionHandler(instance, props, event as APIGatewayProxyEvent)
                 }
 
                 if (event.requestContext.routeKey === `${props.route}.unsub`) {
-                    return removeSubscriptionHandler(instance, props, event)
+                    return removeSubscriptionHandler(instance, props, event as APIGatewayProxyEvent)
                 }
 
                 return {
