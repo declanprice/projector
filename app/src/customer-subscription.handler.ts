@@ -1,11 +1,11 @@
 import { HandleSubscription, SubscriptionHandler } from '../../src/subscription'
 import { object, Output, string } from 'valibot'
 
-const customerSubscriptionFilter = object({
+const CustomerSubscriptionFilterSchema = object({
     customerId: string(),
 })
 
-type CustomerSubscriptionFilter = Output<typeof customerSubscriptionFilter>
+type CustomerSubscriptionFilter = Output<typeof CustomerSubscriptionFilterSchema>
 
 export class CustomerSubscriptionUpdate {
     constructor(
@@ -19,15 +19,11 @@ export class CustomerSubscriptionUpdate {
     route: 'customer.updates',
     lookupKey: 'customerId',
     on: CustomerSubscriptionUpdate,
-    schema: customerSubscriptionFilter,
+    filterSchema: CustomerSubscriptionFilterSchema,
 })
 export class CustomerSubscriptionHandler
     implements HandleSubscription<CustomerSubscriptionUpdate, CustomerSubscriptionFilter>
 {
-    async onAdd(filter: CustomerSubscriptionFilter) {}
-
-    async onRemove(filter: CustomerSubscriptionFilter) {}
-
     filter(update: CustomerSubscriptionUpdate, filter: CustomerSubscriptionFilter) {
         return true
     }

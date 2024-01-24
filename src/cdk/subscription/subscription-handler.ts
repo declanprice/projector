@@ -44,15 +44,13 @@ export class SubscriptionHandler extends NodejsFunction {
 
         const subscriptionHandlerProps = getSubscriptionHandlerProps(handler)
 
-        const integration = new WebSocketLambdaIntegration(`${handler.name}-WebSocketIntegration`, this)
-
-        subscriptionApi.addRoute(`${subscriptionHandlerProps.route}.add`, {
-            integration,
+        subscriptionApi.addRoute(`${subscriptionHandlerProps.route}.sub`, {
+            integration: new WebSocketLambdaIntegration(`${handler.name}-SubIntegration`, this),
             returnResponse: true,
         })
 
-        subscriptionApi.addRoute(`${subscriptionHandlerProps.route}.remove`, {
-            integration,
+        subscriptionApi.addRoute(`${subscriptionHandlerProps.route}.unsub`, {
+            integration: new WebSocketLambdaIntegration(`${handler.name}-UnsubIntegration`, this),
             returnResponse: true,
         })
 

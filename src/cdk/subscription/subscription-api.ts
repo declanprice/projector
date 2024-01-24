@@ -27,6 +27,7 @@ export class SubscriptionApi extends WebSocketApi {
                         handler: 'subscriptionApiDefaultHandler',
                     })
                 ),
+                returnResponse: true,
             },
             ...props,
         })
@@ -57,10 +58,12 @@ export class SubscriptionApi extends WebSocketApi {
 
         this.addRoute('$connect', {
             integration: new WebSocketLambdaIntegration(`${id}-OnConnectWebsocketIntegration`, onConnectFunction),
+            returnResponse: true,
         })
 
         this.addRoute('$disconnect', {
             integration: new WebSocketLambdaIntegration(`${id}-OnConnectWebsocketIntegration`, onDisconnectFunction),
+            returnResponse: true,
         })
 
         new WebSocketStage(this, `${this}-WebsocketStage`, {

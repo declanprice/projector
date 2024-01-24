@@ -1,12 +1,12 @@
 import { SubscriptionHandlerProps } from './subscription-handler.decorator'
 import { APIGatewayProxyEventV2 } from 'aws-lambda'
 import { SNSEvent } from 'aws-lambda/trigger/sns'
-import { SubscriptionItem } from '../store/subscription/subscription.item'
+import { parse } from 'valibot'
 
 export type HandleSubscription<Update, Filter> = {
-    onAdd?: (connection: Filter) => Promise<any>
-    onRemove?: (connection: Filter) => Promise<any>
-    filter?: (update: Update, connection: Filter) => boolean
+    onAdd?: () => Promise<any>
+    onRemove?: () => Promise<any>
+    filter?: (update: Update, filter: Filter) => boolean
     handle: (update: Update) => Promise<any>
 }
 
@@ -15,9 +15,27 @@ export const addSubscriptionHandler = async (
     props: SubscriptionHandlerProps,
     event: APIGatewayProxyEventV2
 ) => {
-    console.log('subscription add handler')
+    let parsedFilter: any
+
+    if (props.filterSchema) {
+        try {
+            const body = JSON.stringify(event.body) as any
+            parsedFilter = parse(props.filterSchema, body?.filter)
+        } catch (error) {
+            return {
+                statusCode: 400,
+                body: 'filter failed schema validation.',
+            }
+        }
+    }
+
     if (instance.onAdd) {
-        await instance.onAdd({} as any)
+        await instance.onAdd()
+    }
+
+    return {
+        statusCode: 200,
+        body: JSON.stringify(parsedFilter),
     }
 }
 
@@ -27,8 +45,14 @@ export const removeSubscriptionHandler = async (
     event: APIGatewayProxyEventV2
 ) => {
     console.log('subscription remove handler')
+
     if (instance.onRemove) {
-        await instance.onRemove({} as any)
+        await instance.onRemove()
+    }
+
+    return {
+        statusCode: 200,
+        body: 'ok',
     }
 }
 

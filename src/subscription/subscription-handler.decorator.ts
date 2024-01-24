@@ -1,7 +1,7 @@
 import { ObjectSchema, symbol } from 'valibot'
 import { APIGatewayProxyEventV2 } from 'aws-lambda'
 import 'reflect-metadata'
-import { subscriptionHandler } from './subscription.handler'
+import { addSubscriptionHandler, removeSubscriptionHandler, subscriptionHandler } from './subscription.handler'
 import { isHttpEvent } from '../util/is-http-event'
 import { SNSEvent } from 'aws-lambda/trigger/sns'
 import { isSnsEvent } from '../util/is-sns-event'
@@ -13,7 +13,7 @@ export type SubscriptionHandlerProps = {
     on: Type
     lookupKey: string
     route: string
-    schema?: ObjectSchema<any>
+    filterSchema?: ObjectSchema<any>
 }
 
 export const SubscriptionHandler = (props: SubscriptionHandlerProps): ClassDecorator => {
@@ -25,12 +25,27 @@ export const SubscriptionHandler = (props: SubscriptionHandlerProps): ClassDecor
 
             if (isHttpEvent(event)) {
                 console.log(`[HTTP EVENT] - ${JSON.stringify(event, null, 2)}`)
+
+                if (event.requestContext.routeKey === `${props.route}.sub`) {
+                    return addSubscriptionHandler(instance, props, event)
+                }
+
+                if (event.requestContext.routeKey === `${props.route}.unsub`) {
+                    return removeSubscriptionHandler(instance, props, event)
+                }
+
+                return {
+                    statusCode: 400,
+                    body: 'invalid route',
+                }
             }
 
             if (isSnsEvent(event)) {
                 console.log(`[SNS EVENT] - ${JSON.stringify(event, null, 2)}`)
-                await subscriptionHandler(instance, props, event)
+                return subscriptionHandler(instance, props, event)
             }
+
+            return
         }
     }
 }

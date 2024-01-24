@@ -5,6 +5,6 @@ export const subscriptionApiDefaultHandler = async (event: APIGatewayProxyEventV
 
     return {
         statusCode: 200,
-        body: 'ok',
+        body: 'pong',
     }
 }
