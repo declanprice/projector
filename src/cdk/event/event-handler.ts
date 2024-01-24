@@ -8,7 +8,7 @@ import { Queue } from 'aws-cdk-lib/aws-sqs'
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { EventBus } from './event-bus'
 import { getEventHandlerGroupTypes } from '../../event/event-handler.decorator'
-import { SubscriptionUpdateBus } from '../subscription/subscription-update-bus'
+import { SubscriptionBus } from '../subscription/subscription-bus'
 import { AggregateStore } from '../aggregate'
 import { OutboxStore } from '../outbox'
 import { ProjectionStore } from '../projection'
@@ -18,7 +18,7 @@ type EventHandlerProps = {
     aggregateStore?: AggregateStore
     outboxStore?: OutboxStore
     projectionStores?: ProjectionStore[]
-    subscriptionUpdateBus?: SubscriptionUpdateBus
+    subscriptionBus?: SubscriptionBus
 } & Partial<NodejsFunctionProps>
 
 export class EventHandler extends NodejsFunction {
@@ -35,7 +35,7 @@ export class EventHandler extends NodejsFunction {
             ...props,
         })
 
-        const { eventBus, aggregateStore, outboxStore, projectionStores, subscriptionUpdateBus } = props
+        const { eventBus, aggregateStore, outboxStore, projectionStores, subscriptionBus } = props
 
         const handlerQueue = new Queue(this, `${handler.name}-Queue`, {
             queueName: `${handler.name}-Queue`,
@@ -68,9 +68,9 @@ export class EventHandler extends NodejsFunction {
             targets: [new SqsQueue(handlerQueue)],
         })
 
-        if (subscriptionUpdateBus) {
-            subscriptionUpdateBus.grantPublish(this)
-            this.addEnvironment('SUBSCRIPTION_BUS_ARN', subscriptionUpdateBus.topicArn)
+        if (subscriptionBus) {
+            subscriptionBus.grantPublish(this)
+            this.addEnvironment('SUBSCRIPTION_BUS_ARN', subscriptionBus.topicArn)
         }
 
         if (aggregateStore) {

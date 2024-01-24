@@ -24,10 +24,11 @@ export const SubscriptionHandler = (props: SubscriptionHandlerProps): ClassDecor
             const instance = new constructor()
 
             if (isHttpEvent(event)) {
-                console.log('http event')
+                console.log(`[HTTP EVENT] - ${JSON.stringify(event, null, 2)}`)
             }
 
             if (isSnsEvent(event)) {
+                console.log(`[SNS EVENT] - ${JSON.stringify(event, null, 2)}`)
                 await subscriptionHandler(instance, props, event)
             }
         }

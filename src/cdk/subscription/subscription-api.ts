@@ -1,4 +1,4 @@
-import { HttpApiProps, WebSocketApi } from 'aws-cdk-lib/aws-apigatewayv2'
+import { HttpApiProps, WebSocketApi, WebSocketStage } from 'aws-cdk-lib/aws-apigatewayv2'
 import { Construct } from 'constructs'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { SubscriptionStore } from './subscription-store'
@@ -8,11 +8,28 @@ import { WebSocketLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integra
 
 type SubscriptionApiProps = {
     subscriptionStore: SubscriptionStore
-} & HttpApiProps
+} & Partial<HttpApiProps>
 
 export class SubscriptionApi extends WebSocketApi {
     constructor(scope: Construct, id: string, props: SubscriptionApiProps) {
-        super(scope, id, props)
+        super(scope, id, {
+            apiName: id,
+            routeSelectionExpression: '$request.body.action',
+            defaultRouteOptions: {
+                integration: new WebSocketLambdaIntegration(
+                    `${id}-DefaultWebsocketIntegration`,
+                    new NodejsFunction(scope, `${id}-Default`, {
+                        functionName: `${id}-Default`,
+                        runtime: Runtime.NODEJS_20_X,
+                        memorySize: 512,
+                        timeout: Duration.seconds(100),
+                        entry: '../src/cdk/subscription/subscription-api-default.handler.ts',
+                        handler: 'subscriptionApiDefaultHandler',
+                    })
+                ),
+            },
+            ...props,
+        })
 
         const { subscriptionStore } = props
 
@@ -44,6 +61,12 @@ export class SubscriptionApi extends WebSocketApi {
 
         this.addRoute('$disconnect', {
             integration: new WebSocketLambdaIntegration(`${id}-OnConnectWebsocketIntegration`, onDisconnectFunction),
+        })
+
+        new WebSocketStage(this, `${this}-WebsocketStage`, {
+            autoDeploy: true,
+            stageName: 'prod',
+            webSocketApi: this,
         })
     }
 }

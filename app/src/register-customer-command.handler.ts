@@ -1,13 +1,13 @@
 import { object, Output, string } from 'valibot'
 import { v4 } from 'uuid'
-import { addMinutes } from 'date-fns'
 import { Customer } from './customer.aggregate'
 import { CommandHandler, HandleCommand } from '../../src/command'
 import { Store } from '../../src/store/store'
-import { commit } from '../../src/store/store-operations'
 import { SchedulerStore } from '../../src/store/scheduler/scheduler.store'
 import { OutboxStore } from '../../src/store/outbox/outbox.store'
 import { CustomerRegisteredEvent } from './customer-registered-event.handler'
+import { SubscriptionBus } from '../../src/subscription/subscription-bus'
+import { CustomerSubscriptionUpdate } from './customer-subscription.handler'
 
 const RegisterCustomerSchema = object({
     firstName: string(),
@@ -22,6 +22,7 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
     readonly store = new Store('Aggregates')
     readonly scheduler = new SchedulerStore('Scheduler')
     readonly outbox = new OutboxStore('Outbox')
+    readonly subscriptionBus = new SubscriptionBus()
 
     async handle(command: Output<typeof RegisterCustomerSchema>) {
         const customerId = v4()
@@ -30,6 +31,9 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
         const customer = new Customer(customerId, 'Declan', 'Price', scheduledTaskId)
         const event = new CustomerRegisteredEvent(customer.customerId)
 
-        await commit(this.store.save(customer), this.outbox.publish(event))
+        await this.subscriptionBus.emit(
+            new CustomerSubscriptionUpdate(customer.customerId, customer.firstName, customer.lastName)
+        )
+        // await commit(this.store.save(customer), this.outbox.publish(event))
     }
 }

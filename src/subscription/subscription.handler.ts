@@ -4,8 +4,8 @@ import { SNSEvent } from 'aws-lambda/trigger/sns'
 import { SubscriptionItem } from '../store/subscription/subscription.item'
 
 export type HandleSubscription<Update, Filter> = {
-    onAdd: (connection: Filter) => Promise<any>
-    onRemove: (connection: Filter) => Promise<any>
+    onAdd?: (connection: Filter) => Promise<any>
+    onRemove?: (connection: Filter) => Promise<any>
     filter?: (update: Update, connection: Filter) => boolean
     handle: (update: Update) => Promise<any>
 }
@@ -16,7 +16,9 @@ export const addSubscriptionHandler = async (
     event: APIGatewayProxyEventV2
 ) => {
     console.log('subscription add handler')
-    await instance.onAdd({} as any)
+    if (instance.onAdd) {
+        await instance.onAdd({} as any)
+    }
 }
 
 export const removeSubscriptionHandler = async (
@@ -25,7 +27,9 @@ export const removeSubscriptionHandler = async (
     event: APIGatewayProxyEventV2
 ) => {
     console.log('subscription remove handler')
-    await instance.onRemove({} as any)
+    if (instance.onRemove) {
+        await instance.onRemove({} as any)
+    }
 }
 
 export const subscriptionHandler = async (

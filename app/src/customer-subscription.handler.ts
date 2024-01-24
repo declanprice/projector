@@ -7,7 +7,13 @@ const customerSubscriptionFilter = object({
 
 type CustomerSubscriptionFilter = Output<typeof customerSubscriptionFilter>
 
-class CustomerSubscriptionUpdate {}
+export class CustomerSubscriptionUpdate {
+    constructor(
+        readonly customerId: string,
+        readonly firstName: string,
+        readonly lastName: string
+    ) {}
+}
 
 @SubscriptionHandler({
     route: 'customer.updates',

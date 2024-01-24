@@ -10,21 +10,27 @@ import {
     CommandHandler,
     SchedulerStore,
     SchedulerStorePublisher,
-    EventHandler,
+    SubscriptionBus,
+    SubscriptionHandler,
+    SubscriptionApi,
+    SubscriptionStore,
 } from '../../src/cdk'
 import { RegisterCustomerCommandHandler } from '../src/register-customer-command.handler'
-import { CustomerRegisteredEventHandler } from '../src/customer-registered-event.handler'
+import { CustomerSubscriptionHandler } from '../src/customer-subscription.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props)
 
-        const eventBus = new EventBus(this, 'EventBus', {
-            eventBusName: 'EventBus',
-        })
+        const eventBus = new EventBus(this, 'EventBus')
 
-        const handlerApi = new HandlerApi(this, 'RestApi', {
-            apiName: 'RestApi',
+        const subscriptionBus = new SubscriptionBus(this, 'SubscriptionBus')
+
+        const handlerApi = new HandlerApi(this, 'RestApi')
+
+        const subscriptionStore = new SubscriptionStore(this, 'Subscriptions')
+        const subscriptionApi = new SubscriptionApi(this, 'SubscriptionApi', {
+            subscriptionStore,
         })
 
         const aggregateStore = new AggregateStore(this, 'Aggregates')
@@ -53,7 +59,15 @@ export class AppStack extends cdk.Stack {
             aggregateStore,
             schedulerStore,
             outboxStore,
+            subscriptionBus,
             entry: 'src/register-customer-command.handler.ts',
+        })
+
+        new SubscriptionHandler(this, CustomerSubscriptionHandler, {
+            subscriptionStore,
+            subscriptionApi,
+            subscriptionBus,
+            entry: 'src/customer-subscription.handler.ts',
         })
 
         // new CommandHandler(this, ChangeCustomerNameCommandHandler, {
@@ -76,9 +90,9 @@ export class AppStack extends cdk.Stack {
         // })
         //
 
-        new EventHandler(this, CustomerRegisteredEventHandler, {
-            eventBus,
-            entry: 'src/customer-registered-event.handler.ts',
-        })
+        // new EventHandler(this, CustomerRegisteredEventHandler, {
+        //     eventBus,
+        //     entry: 'src/customer-registered-event.handler.ts',
+        // })
     }
 }
