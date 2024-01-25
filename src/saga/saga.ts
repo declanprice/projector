@@ -6,7 +6,7 @@ export class Saga {
 
     constructor(readonly stateMachineName: string) {}
 
-    async startSync(input: any): Promise<any | null> {
+    async startSync(input: any): Promise<void> {
         const response = await this.client.send(
             new StartSyncExecutionCommand({
                 stateMachineArn: createStateMachineArn(this.stateMachineName),
@@ -20,13 +20,6 @@ export class Saga {
         if (response.status === SyncExecutionStatus.FAILED) {
             throw new Error(response.cause)
         }
-
-        if (response.output) {
-            const parsedOutput = JSON.parse(response.output)
-            return parsedOutput?.Payload || null
-        }
-
-        return null
     }
 
     start() {}

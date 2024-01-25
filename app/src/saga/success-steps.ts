@@ -25,5 +25,7 @@ export class StepTwoHandler implements HandleCommand {
 export class StepThreeHandler implements HandleCommand {
     async handle(command: Command<any>) {
         console.log('step three handler', command)
+
+        throw new Error('something went wrong with step three handler')
     }
 }

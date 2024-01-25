@@ -18,7 +18,8 @@ import {
 import { RegisterCustomerCommandHandler } from '../src/register-customer-command.handler'
 import { CustomerSubscriptionHandler } from '../src/customer-subscription.handler'
 import { Saga } from '../../src/cdk/saga/saga'
-import { StepOneHandler, StepTwoHandler } from '../src/saga/success-steps'
+import { StepOneHandler, StepThreeHandler, StepTwoHandler } from '../src/saga/success-steps'
+import { ErrorStepOneHandler, ErrorStepTwoHandler } from '../src/saga/error-steps'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -80,6 +81,18 @@ export class AppStack extends cdk.Stack {
             entry: 'src/saga/success-steps.ts',
         })
 
+        const stepThree = new CommandHandler(this, StepThreeHandler, {
+            entry: 'src/saga/success-steps.ts',
+        })
+
+        const errorStepOne = new CommandHandler(this, ErrorStepOneHandler, {
+            entry: 'src/saga/error-steps.ts',
+        })
+
+        const errorStepTwo = new CommandHandler(this, ErrorStepTwoHandler, {
+            entry: 'src/saga/error-steps.ts',
+        })
+
         const saga = new Saga(this, 'SagaHandler', {
             startBy: registerCustomer,
             express: true,
@@ -87,10 +100,16 @@ export class AppStack extends cdk.Stack {
 
         saga.step('StepOne', {
             invoke: stepOne,
+            compensate: errorStepOne,
         })
 
         saga.step('StepTwo', {
             invoke: stepTwo,
+            compensate: errorStepTwo,
+        })
+
+        saga.step('StepThree', {
+            invoke: stepThree,
         })
 
         saga.create()

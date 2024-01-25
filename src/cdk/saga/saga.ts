@@ -1,4 +1,12 @@
-import { DefinitionBody, Fail, LogLevel, StateMachine, StateMachineType, Succeed } from 'aws-cdk-lib/aws-stepfunctions'
+import {
+    DefinitionBody,
+    Fail,
+    JsonPath,
+    LogLevel,
+    StateMachine,
+    StateMachineType,
+    Succeed,
+} from 'aws-cdk-lib/aws-stepfunctions'
 import { Construct } from 'constructs'
 import { CommandHandler } from '../command'
 import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks'
@@ -12,7 +20,11 @@ export type SagaHandlerProps = {
 
 type SagaStep = {
     stepName: string
+} & SagaStepOptions
+
+type SagaStepOptions = {
     invoke: CommandHandler
+    waitForTask?: boolean
     compensate?: CommandHandler
 }
 
@@ -27,15 +39,10 @@ export class Saga extends Construct {
         super(scope, id)
     }
 
-    step(
-        stepName: string,
-        options: {
-            invoke: CommandHandler
-        }
-    ) {
+    step(stepName: string, options: SagaStepOptions) {
         this.steps.push({
             stepName,
-            invoke: options.invoke,
+            ...options,
         })
     }
 
@@ -44,29 +51,69 @@ export class Saga extends Construct {
 
         const successInvokes: LambdaInvoke[] = []
 
-        const success = new Succeed(this, 'Success')
+        const failInvokes: LambdaInvoke[] = []
 
-        const fail = new Fail(this, 'Fail')
+        const chainInvokes = () => {
+            const success = new Succeed(this, 'Success')
 
-        let counter = 0
+            let counter = 0
 
-        for (const step of this.steps) {
-            console.log(step.stepName)
+            for (const step of this.steps) {
+                const invoke = new LambdaInvoke(this, `${step.invoke.functionName}`, {
+                    lambdaFunction: step.invoke,
+                    resultSelector: {
+                        isStateMachine: true,
+                        'input.$': '$$.Execution.Input.input',
+                        'taskToken.$': step?.waitForTask === true ? '$$.Task.Token' : undefined,
+                    },
+                })
 
-            const invoke = new LambdaInvoke(this, `${step.stepName}-Invoke`, {
-                lambdaFunction: step.invoke,
-            })
+                successInvokes.push(invoke)
 
-            successInvokes.push(invoke)
+                if (counter > 0) {
+                    successInvokes[counter - 1].next(invoke)
 
-            if (counter > 0) {
-                successInvokes[counter - 1].next(invoke)
+                    const compensate = this.steps[counter - 1].compensate
+
+                    if (compensate) {
+                        const compensateInvoke = new LambdaInvoke(this, `${compensate.functionName}-Invoke`, {
+                            lambdaFunction: compensate,
+                            resultSelector: {
+                                isStateMachine: true,
+                                'input.$': '$$.Execution.Input.input',
+                                'taskToken.$': step?.waitForTask === true ? '$$.Task.Token' : undefined,
+                            },
+                        })
+
+                        failInvokes.push(compensateInvoke)
+
+                        invoke.addCatch(compensateInvoke)
+                    }
+                }
+
+                counter++
             }
 
-            counter++
+            successInvokes[successInvokes.length - 1].next(success)
         }
 
-        successInvokes[successInvokes.length - 1].next(success)
+        const chainCompensationInvokes = () => {
+            const fail = new Fail(this, 'Fail')
+
+            let counter = 0
+
+            for (const failInvoke of failInvokes) {
+                if (counter === failInvokes.length - 1) continue
+                failInvokes[counter + 1].next(failInvoke)
+                counter++
+            }
+
+            failInvokes[0].next(fail)
+        }
+
+        chainInvokes()
+
+        chainCompensationInvokes()
 
         const stateMachine = new StateMachine(this, `${this.id}-StateMachine`, {
             stateMachineName: `${this.id}`,

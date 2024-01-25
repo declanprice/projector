@@ -1,7 +1,7 @@
 export type SfnEvent = {
     isStateMachine: boolean
     input: any
-    nextToken?: any
+    taskToken?: any
 }
 
 export const isSfnEvent = (event: any): event is SfnEvent => {
