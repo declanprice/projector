@@ -16,7 +16,8 @@ export const CommandHandler = (props: CommandHandlerDecoratorProps = {}): ClassD
     return (constructor: any) => {
         Reflect.defineMetadata(COMMAND_HANDLER_METADATA, props, constructor)
 
-        constructor.prototype.commandHandler = (event: APIGatewayProxyEventV2 | SQSEvent) => {
+        constructor.prototype.commandHandler = (event: APIGatewayProxyEventV2) => {
+            console.log(`[COMMAND HANDLER EVENT] - ${JSON.stringify(event, null, 2)}`)
             return commandHandler(new constructor(), event)
         }
     }

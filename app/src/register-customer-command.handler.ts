@@ -5,9 +5,8 @@ import { CommandHandler, HandleCommand } from '../../src/command'
 import { Store } from '../../src/store/store'
 import { SchedulerStore } from '../../src/store/scheduler/scheduler.store'
 import { OutboxStore } from '../../src/store/outbox/outbox.store'
-import { CustomerRegisteredEvent } from './customer-registered-event.handler'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
-import { CustomerSubscriptionUpdate } from './customer-subscription.handler'
+import { Saga } from '../../src/saga/saga'
 
 const RegisterCustomerSchema = object({
     firstName: string(),
@@ -23,18 +22,18 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
     readonly scheduler = new SchedulerStore('Scheduler')
     readonly outbox = new OutboxStore('Outbox')
     readonly subscriptionBus = new SubscriptionBus()
+    readonly saga = new Saga('SagaHandler')
 
     async handle(command: Output<typeof RegisterCustomerSchema>) {
         const customerId = '123'
         const scheduledTaskId = v4()
-
         const customer = new Customer(customerId, 'Declan', 'Price', scheduledTaskId)
+        return this.saga.startSync(customer)
+        // const event = new CustomerRegisteredEvent(customer.customerId)
 
-        const event = new CustomerRegisteredEvent(customer.customerId)
-
-        await this.subscriptionBus.emit(
-            new CustomerSubscriptionUpdate(customer.customerId, customer.firstName, customer.lastName)
-        )
+        // await this.subscriptionBus.emit(
+        //     new CustomerSubscriptionUpdate(customer.customerId, customer.firstName, customer.lastName)
+        // )
 
         // await commit(this.store.save(customer), this.outbox.publish(event))
     }

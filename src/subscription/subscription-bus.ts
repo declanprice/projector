@@ -1,6 +1,6 @@
 import { isClass } from '../util/is-class'
 import { PublishCommand, SNSClient } from '@aws-sdk/client-sns'
-import { createTopicArn } from '../util/is-sns-event'
+import { createTopicArn } from '../util/sns-utils'
 
 export class SubscriptionBus {
     private readonly SUBSCRIPTION_BUS_ARN = process.env.SUBSCRIPTION_BUS_ARN as string

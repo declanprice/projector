@@ -1,10 +1,10 @@
 import { ObjectSchema, symbol } from 'valibot'
-import { APIGatewayProxyEvent, APIGatewayProxyEventV2 } from 'aws-lambda'
+import { APIGatewayProxyEvent } from 'aws-lambda'
 import 'reflect-metadata'
 import { addSubscriptionHandler, removeSubscriptionHandler, subscriptionHandler } from './subscription.handler'
 import { isHttpEvent } from '../util/is-http-event'
 import { SNSEvent } from 'aws-lambda/trigger/sns'
-import { isSnsEvent } from '../util/is-sns-event'
+import { isSnsEvent } from '../util/sns-utils'
 import { Type } from '../util/type'
 
 const SUBSCRIPTION_HANDLER_METADATA = symbol('SUBSCRIPTION_HANDLER_METADATA')

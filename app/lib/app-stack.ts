@@ -17,6 +17,8 @@ import {
 } from '../../src/cdk'
 import { RegisterCustomerCommandHandler } from '../src/register-customer-command.handler'
 import { CustomerSubscriptionHandler } from '../src/customer-subscription.handler'
+import { Saga } from '../../src/cdk/saga/saga'
+import { StepOneHandler } from '../src/saga/success-steps'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -54,7 +56,7 @@ export class AppStack extends cdk.Stack {
         // const projectionStore = new ProjectionStore(this, 'Projections')
 
         /** Handlers **/
-        new CommandHandler(this, RegisterCustomerCommandHandler, {
+        const registerCustomer = new CommandHandler(this, RegisterCustomerCommandHandler, {
             handlerApi,
             aggregateStore,
             schedulerStore,
@@ -69,6 +71,21 @@ export class AppStack extends cdk.Stack {
             subscriptionBus,
             entry: 'src/customer-subscription.handler.ts',
         })
+
+        const stepOne = new CommandHandler(this, StepOneHandler, {
+            entry: 'src/saga/success-steps.ts',
+        })
+
+        const saga = new Saga(this, 'SagaHandler', {
+            startBy: registerCustomer,
+            express: true,
+        })
+
+        saga.step('StepOne', {
+            invoke: stepOne,
+        })
+
+        saga.create()
 
         // new CommandHandler(this, ChangeCustomerNameCommandHandler, {
         //     commandBus,
