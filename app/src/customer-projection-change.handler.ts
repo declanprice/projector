@@ -3,7 +3,6 @@ import { CustomerProjection } from './customer.projection'
 import { ChangeEvent, ChangeHandler, ChangeHandlerGroup, ChangeType } from '../../src/event'
 import { Store } from '../../src/store/store'
 import { commit } from '../../src/store/store-operations'
-import { CustomerSubscriptionUpdate } from './customer-subscription.handler'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
 
 @ChangeHandlerGroup({
@@ -18,9 +17,7 @@ export class CustomerProjectionChangeHandler {
         console.log('INSERT CHANGE', change)
         const projection = new CustomerProjection(change.data.customerId, change.data.firstName, change.data.lastName)
         await commit(this.store.save(projection))
-        await this.subscriptionBus.emit(
-            new CustomerSubscriptionUpdate(change.data.customerId, change.data.firstName, change.data.lastName)
-        )
+        await this.subscriptionBus.emit('customer.updates', projection)
     }
 
     @ChangeHandler(Customer, ChangeType.MODIFY)

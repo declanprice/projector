@@ -16,6 +16,7 @@ import {
     SubscriptionStore,
     QueryHandler,
     ProjectionStore,
+    ChangeHandler,
 } from '../../src/cdk'
 import { RegisterCustomerCommandHandler } from '../src/register-customer-command.handler'
 import { CustomerSubscriptionHandler } from '../src/customer-subscription.handler'
@@ -24,6 +25,7 @@ import { StepOneHandler, StepThreeHandler, StepTwoHandler } from '../src/saga/su
 import { ErrorStepOneHandler, ErrorStepTwoHandler } from '../src/saga/error-steps'
 import { SendTokenHandler } from '../src/saga/send-token.handler'
 import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id-query.handler'
+import { CustomerProjectionChangeHandler } from '../src/customer-projection-change.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -129,10 +131,10 @@ export class AppStack extends cdk.Stack {
             entry: 'src/get-customer-by-id-query.handler.ts',
         })
 
-        // new ChangeHandler(this, CustomerProjectionChangeHandler, {
-        //     eventBus,
-        //     projectionStores: [customerProjection],
-        //     entry: 'src/customer-projection-change.handler.ts',
-        // })
+        new ChangeHandler(this, CustomerProjectionChangeHandler, {
+            eventBus,
+            projectionStores: [projectionStore],
+            entry: 'src/customer-projection-change.handler.ts',
+        })
     }
 }
