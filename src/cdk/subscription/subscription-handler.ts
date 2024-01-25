@@ -21,7 +21,7 @@ type SubscriptionHandlerProps = {
 } & Partial<NodejsFunction>
 
 export class SubscriptionHandler extends NodejsFunction {
-    constructor(scope: Construct, handler: Type<HandleSubscription<any, any>>, props: SubscriptionHandlerProps) {
+    constructor(scope: Construct, handler: Type<HandleSubscription>, props: SubscriptionHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
             handler: `index.${handler.name}.prototype.subscriptionHandler`,
@@ -57,8 +57,8 @@ export class SubscriptionHandler extends NodejsFunction {
         this.addEventSource(
             new SnsEventSource(subscriptionBus, {
                 filterPolicy: {
-                    type: SubscriptionFilter.stringFilter({
-                        allowlist: [handlerProps.on.name],
+                    route: SubscriptionFilter.stringFilter({
+                        allowlist: [handlerProps.route],
                     }),
                 },
             })

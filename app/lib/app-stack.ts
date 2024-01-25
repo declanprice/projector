@@ -40,29 +40,32 @@ export class AppStack extends cdk.Stack {
             subscriptionStore,
         })
 
-        // const aggregateStore = new AggregateStore(this, 'Aggregates')
-        // new AggregateStorePublisher(this, 'AggregatesPublisher', {
-        //     eventBus,
-        //     aggregateStore,
-        // })
-        //
-        // const schedulerStore = new SchedulerStore(this, 'Scheduler')
-        // new SchedulerStorePublisher(this, 'SchedulerPublisher', {
-        //     eventBus,
-        //     schedulerStore,
-        // })
-        //
-        // const outboxStore = new OutboxStore(this, 'Outbox')
-        // new OutboxStorePublisher(this, 'OutboxPublisher', {
-        //     eventBus,
-        //     outboxStore,
-        // })
+        const aggregateStore = new AggregateStore(this, 'Aggregates')
+        new AggregateStorePublisher(this, 'AggregatesPublisher', {
+            eventBus,
+            aggregateStore,
+        })
 
-        // const projectionStore = new ProjectionStore(this, 'Projections')
+        const schedulerStore = new SchedulerStore(this, 'Scheduler')
+        new SchedulerStorePublisher(this, 'SchedulerPublisher', {
+            eventBus,
+            schedulerStore,
+        })
+
+        const outboxStore = new OutboxStore(this, 'Outbox')
+        new OutboxStorePublisher(this, 'OutboxPublisher', {
+            eventBus,
+            outboxStore,
+        })
+
+        const projectionStore = new ProjectionStore(this, 'Projections')
 
         /** Handlers **/
         const registerCustomer = new CommandHandler(this, RegisterCustomerCommandHandler, {
             handlerApi,
+            aggregateStore,
+            schedulerStore,
+            outboxStore,
             subscriptionBus,
             entry: 'src/register-customer-command.handler.ts',
         })
@@ -122,21 +125,14 @@ export class AppStack extends cdk.Stack {
 
         new QueryHandler(this, GetCustomerByIdQueryHandler, {
             handlerApi,
-            projectionStores: [],
+            projectionStores: [projectionStore],
             entry: 'src/get-customer-by-id-query.handler.ts',
         })
 
-        //
         // new ChangeHandler(this, CustomerProjectionChangeHandler, {
         //     eventBus,
         //     projectionStores: [customerProjection],
         //     entry: 'src/customer-projection-change.handler.ts',
-        // })
-        //
-
-        // new EventHandler(this, CustomerRegisteredEventHandler, {
-        //     eventBus,
-        //     entry: 'src/customer-registered-event.handler.ts',
         // })
     }
 }

@@ -10,7 +10,6 @@ import { Type } from '../util/type'
 const SUBSCRIPTION_HANDLER_METADATA = symbol('SUBSCRIPTION_HANDLER_METADATA')
 
 export type SubscriptionHandlerProps = {
-    on: Type
     lookupKey: string
     route: string
     filterSchema?: ObjectSchema<any>

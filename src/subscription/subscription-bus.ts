@@ -9,22 +9,18 @@ export class SubscriptionBus {
 
     constructor(private readonly topicName?: string) {}
 
-    async emit(update: any) {
-        if (!isClass(update)) throw new Error('update must be a valid class')
-
+    async emit(route: string, update: any) {
         try {
-            const type = update.constructor.name
-
             const input = {
                 TopicArn: this.topicName ? createTopicArn(this.topicName) : this.SUBSCRIPTION_BUS_ARN,
                 MessageAttributes: {
-                    type: {
+                    route: {
                         DataType: 'String',
-                        StringValue: type,
+                        StringValue: route,
                     },
                 },
                 Message: JSON.stringify({
-                    type: type,
+                    route: route,
                     data: update,
                 }),
             }

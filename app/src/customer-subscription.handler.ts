@@ -7,23 +7,18 @@ const CustomerSubscriptionFilterSchema = object({
 
 type CustomerSubscriptionFilter = Output<typeof CustomerSubscriptionFilterSchema>
 
-export class CustomerSubscriptionUpdate {
-    constructor(
-        readonly customerId: string,
-        readonly firstName: string,
-        readonly lastName: string
-    ) {}
+export type CustomerSubscriptionUpdate = {
+    customerId: string
+    firstName: string
+    lastName: string
 }
 
 @SubscriptionHandler({
     route: 'customer.updates',
     lookupKey: 'customerId',
-    on: CustomerSubscriptionUpdate,
     filterSchema: CustomerSubscriptionFilterSchema,
 })
-export class CustomerSubscriptionHandler
-    implements HandleSubscription<CustomerSubscriptionUpdate, CustomerSubscriptionFilter>
-{
+export class CustomerSubscriptionHandler implements HandleSubscription {
     filter(update: CustomerSubscriptionUpdate, filter: CustomerSubscriptionFilter) {
         return true
     }

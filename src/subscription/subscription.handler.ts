@@ -7,11 +7,11 @@ import { ApiGatewayManagementApi, PostToConnectionCommand } from '@aws-sdk/clien
 import { SubscriptionItem } from '../store/subscription/subscription.item'
 import { commit } from '../store/store-operations'
 
-export type HandleSubscription<Update, Filter> = {
+export type HandleSubscription = {
     onSub?: () => Promise<any>
     onUnsub?: () => Promise<any>
-    filter?: (update: Update, filter: Filter) => boolean
-    handle: (update: Update) => Promise<any>
+    filter?: (update: any, filter: any) => boolean
+    handle: (update: any) => Promise<any>
 }
 
 const store = new SubscriptionStore()
@@ -23,7 +23,7 @@ const subscriptionApi = new ApiGatewayManagementApi({
 })
 
 export const addSubscriptionHandler = async (
-    instance: HandleSubscription<any, any>,
+    instance: HandleSubscription,
     props: SubscriptionHandlerProps,
     event: APIGatewayProxyEvent
 ) => {
@@ -72,7 +72,7 @@ export const addSubscriptionHandler = async (
 }
 
 export const removeSubscriptionHandler = async (
-    instance: HandleSubscription<any, any>,
+    instance: HandleSubscription,
     props: SubscriptionHandlerProps,
     event: APIGatewayProxyEvent
 ) => {
@@ -102,7 +102,7 @@ export const removeSubscriptionHandler = async (
 }
 
 export const subscriptionHandler = async (
-    instance: HandleSubscription<any, any>,
+    instance: HandleSubscription,
     props: SubscriptionHandlerProps,
     event: SNSEvent
 ) => {
