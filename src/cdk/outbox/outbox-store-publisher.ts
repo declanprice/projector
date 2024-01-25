@@ -5,6 +5,7 @@ import { Duration } from 'aws-cdk-lib'
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { EventBus } from '../event'
+import * as path from 'path'
 
 type OutboxPublisherProps = {
     eventBus: EventBus
@@ -17,7 +18,7 @@ export class OutboxStorePublisher extends NodejsFunction {
             functionName: id,
             timeout: Duration.seconds(10),
             memorySize: 512,
-            entry: '../src/cdk/outbox/outbox-publisher.handler.ts',
+            entry: path.join(__dirname, './outbox-publisher.handler.ts'),
             handler: 'outboxPublisherHandler',
             environment: {
                 OUTBOX_STORE_NAME: props.outboxStore.tableName,

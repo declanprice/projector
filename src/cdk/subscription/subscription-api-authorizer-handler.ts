@@ -13,6 +13,7 @@ import { Type } from '../../util/type'
 import { SubscriptionFilter } from 'aws-cdk-lib/aws-sns'
 import { Effect, PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import { subscriptionApiAuthorizer } from './subscription-api-authorizer.handler'
+import path from 'path'
 
 type SubscriptionHandlerProps = {
     subscriptionApi: SubscriptionApi
@@ -25,7 +26,7 @@ export class SubscriptionApiAuthorizerHandler extends NodejsFunction {
     constructor(scope: Construct, handler: Type<HandleSubscription<any, any>>, props: SubscriptionHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
-            entry: '../src/cdk/subscription/subscription-api-authorizer.handler.ts',
+            entry: path.join(__dirname, './subscription-api-authorizer.handler.ts'),
             handler: `subscriptionApiAuthorizer`,
             runtime: Runtime.NODEJS_20_X,
             timeout: Duration.seconds(10),

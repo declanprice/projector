@@ -5,6 +5,7 @@ import { SubscriptionStore } from './subscription-store'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
 import { Duration } from 'aws-cdk-lib'
 import { WebSocketLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'
+import * as path from 'path'
 
 type SubscriptionApiProps = {
     subscriptionStore: SubscriptionStore
@@ -23,7 +24,7 @@ export class SubscriptionApi extends WebSocketApi {
                         runtime: Runtime.NODEJS_20_X,
                         memorySize: 512,
                         timeout: Duration.seconds(100),
-                        entry: '../src/cdk/subscription/subscription-api-default.handler.ts',
+                        entry: path.join(__dirname, './subscription-api-default.handler.ts'),
                         handler: 'subscriptionApiDefaultHandler',
                     })
                 ),
@@ -39,7 +40,7 @@ export class SubscriptionApi extends WebSocketApi {
             runtime: Runtime.NODEJS_20_X,
             memorySize: 512,
             timeout: Duration.seconds(100),
-            entry: '../src/cdk/subscription/subscription-api-connect.handler.ts',
+            entry: path.join(__dirname, './subscription-api-connect.handler.ts'),
             handler: 'subscriptionApiConnectHandler',
             environment: {
                 SUBSCRIPTION_STORE_NAME: subscriptionStore.tableName,
@@ -53,7 +54,7 @@ export class SubscriptionApi extends WebSocketApi {
             runtime: Runtime.NODEJS_20_X,
             memorySize: 512,
             timeout: Duration.seconds(100),
-            entry: '../src/cdk/subscription/subscription-api-disconnect.handler.ts',
+            entry: path.join(__dirname, './subscription-api-disconnect.handler.ts'),
             handler: 'subscriptionApiDisconnectHandler',
             environment: {
                 SUBSCRIPTION_STORE_NAME: subscriptionStore.tableName,

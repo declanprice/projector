@@ -6,7 +6,7 @@ import { DynamoEventSource, SqsDlq } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { EventBus } from '../event'
 import { Effect, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
-import { Queue } from 'aws-cdk-lib/aws-sqs'
+import * as path from 'path'
 
 type SchedulerStorePublisherProps = {
     eventBus: EventBus
@@ -19,7 +19,7 @@ export class SchedulerStorePublisher extends NodejsFunction {
             functionName: id,
             timeout: Duration.seconds(10),
             memorySize: 512,
-            entry: '../src/cdk/scheduler/scheduler-publisher.handler.ts',
+            entry: path.join(__dirname, './scheduler-publisher.handler.ts'),
             handler: 'schedulerPublisherHandler',
             environment: {
                 EVENT_BUS_ARN: props.eventBus.eventBusArn,

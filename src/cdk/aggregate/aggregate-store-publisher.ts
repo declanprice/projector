@@ -5,6 +5,7 @@ import { Duration } from 'aws-cdk-lib'
 import { AggregateStore } from './aggregate-store'
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { EventBus } from '../event'
+import * as path from 'path'
 
 type StateStorePublisherProps = {
     eventBus: EventBus
@@ -18,7 +19,7 @@ export class AggregateStorePublisher extends NodejsFunction {
             runtime: Runtime.NODEJS_20_X,
             timeout: Duration.seconds(10),
             memorySize: 512,
-            entry: '../src/cdk/aggregate/aggregate-store-publisher.handler.ts',
+            entry: path.join(__dirname, './aggregate-store-publisher.handler.ts'),
             handler: 'aggregateStorePublisherHandler',
             environment: {
                 EVENT_BUS_NAME: props.eventBus.eventBusName,
