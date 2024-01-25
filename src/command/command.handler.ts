@@ -32,5 +32,7 @@ export const commandHandler = async (classInstance: HandleCommand, event: APIGat
         return classInstance.handle(message)
     }
 
-    console.log(`[INVALID COMMAND INVOCATION TYPE] - only http or state machine invocations are allowed`)
+    throw new Error(
+        `[INVALID COMMAND INVOCATION TYPE] - only http or valid structured saga state machine invocations are allowed`
+    )
 }

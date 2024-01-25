@@ -28,7 +28,7 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
         const customerId = '123'
         const scheduledTaskId = v4()
         const customer = new Customer(customerId, 'Declan', 'Price', scheduledTaskId)
-        return this.saga.startSync(customer)
+        return this.saga.start(customer)
         // const event = new CustomerRegisteredEvent(customer.customerId)
 
         // await this.subscriptionBus.emit(

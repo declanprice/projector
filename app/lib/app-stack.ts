@@ -20,6 +20,7 @@ import { CustomerSubscriptionHandler } from '../src/customer-subscription.handle
 import { Saga } from '../../src/cdk/saga/saga'
 import { StepOneHandler, StepThreeHandler, StepTwoHandler } from '../src/saga/success-steps'
 import { ErrorStepOneHandler, ErrorStepTwoHandler } from '../src/saga/error-steps'
+import { SendTokenHandler } from '../src/saga/send-token.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -66,6 +67,11 @@ export class AppStack extends cdk.Stack {
             entry: 'src/register-customer-command.handler.ts',
         })
 
+        const sendToken = new CommandHandler(this, SendTokenHandler, {
+            handlerApi,
+            entry: 'src/saga/send-token.handler.ts',
+        })
+
         new SubscriptionHandler(this, CustomerSubscriptionHandler, {
             subscriptionStore,
             subscriptionApi,
@@ -95,12 +101,12 @@ export class AppStack extends cdk.Stack {
 
         const saga = new Saga(this, 'SagaHandler', {
             startBy: registerCustomer,
+            allowSendToken: [sendToken],
         })
 
         saga.step('StepOne', {
             invoke: stepOne,
             compensate: errorStepOne,
-            waitForTask: true,
         })
 
         saga.step('StepTwo', {
@@ -113,13 +119,6 @@ export class AppStack extends cdk.Stack {
         })
 
         saga.create()
-
-        // new CommandHandler(this, ChangeCustomerNameCommandHandler, {
-        //     commandBus,
-        //     aggregateStore,
-        //     outboxStore,
-        //     entry: 'src/change-customer-name-command.handler.ts',
-        // })
 
         // new QueryHandler(this, GetCustomerByIdQueryHandler, {
         //     handlerApi,

@@ -1,4 +1,14 @@
-import { DefinitionBody, Fail, LogLevel, StateMachine, StateMachineType, Succeed } from 'aws-cdk-lib/aws-stepfunctions'
+import {
+    DefinitionBody,
+    Fail,
+    IntegrationPattern,
+    JsonPath,
+    LogLevel,
+    StateMachine,
+    StateMachineType,
+    Succeed,
+    TaskInput,
+} from 'aws-cdk-lib/aws-stepfunctions'
 import { Construct } from 'constructs'
 import { CommandHandler } from '../command'
 import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks'
@@ -7,6 +17,7 @@ import { RemovalPolicy } from 'aws-cdk-lib'
 
 export type SagaHandlerProps = {
     startBy: CommandHandler
+    allowSendToken?: CommandHandler[]
     express?: boolean
 }
 
@@ -53,10 +64,18 @@ export class Saga extends Construct {
             for (const step of this.steps) {
                 const invoke = new LambdaInvoke(this, `${step.invoke.functionName}`, {
                     lambdaFunction: step.invoke,
+                    integrationPattern:
+                        step?.waitForTask === true
+                            ? IntegrationPattern.WAIT_FOR_TASK_TOKEN
+                            : IntegrationPattern.REQUEST_RESPONSE,
+                    payload: TaskInput.fromObject({
+                        isStateMachine: true,
+                        'input.$': '$$.Execution.Input.input',
+                        taskToken: step?.waitForTask === true ? JsonPath.taskToken : undefined,
+                    }),
                     resultSelector: {
                         isStateMachine: true,
                         'input.$': '$$.Execution.Input.input',
-                        'taskToken.$': step?.waitForTask === true ? '$$.Task.Token' : undefined,
                     },
                 })
 
@@ -79,7 +98,7 @@ export class Saga extends Construct {
 
                         failInvokes.push(compensateInvoke)
 
-                        invoke.addCatch(compensateInvoke)
+                        invoke.addCatch(compensateInvoke, { resultPath: JsonPath.DISCARD })
                     }
                 }
 
@@ -123,5 +142,11 @@ export class Saga extends Construct {
 
         stateMachine.grantStartSyncExecution(this.props.startBy)
         stateMachine.grantStartExecution(this.props.startBy)
+
+        if (this.props.allowSendToken) {
+            for (const handler of this.props.allowSendToken) {
+                stateMachine.grantTaskResponse(handler)
+            }
+        }
     }
 }

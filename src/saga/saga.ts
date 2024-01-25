@@ -1,4 +1,10 @@
-import { SFNClient, StartSyncExecutionCommand, SyncExecutionStatus } from '@aws-sdk/client-sfn'
+import {
+    SendTaskSuccessCommand,
+    SFNClient,
+    StartExecutionCommand,
+    StartSyncExecutionCommand,
+    SyncExecutionStatus,
+} from '@aws-sdk/client-sfn'
 import { createStateMachineArn } from '../util/sfn-utils'
 
 export class Saga {
@@ -22,9 +28,33 @@ export class Saga {
         }
     }
 
-    start() {}
+    async start(input: any) {
+        await this.client.send(
+            new StartExecutionCommand({
+                stateMachineArn: createStateMachineArn(this.stateMachineName),
+                input: JSON.stringify({
+                    isStateMachine: true,
+                    input,
+                }),
+            })
+        )
+    }
 
-    successToken() {}
+    async successToken(token: string) {
+        return this.client.send(
+            new SendTaskSuccessCommand({
+                taskToken: token,
+                output: JSON.stringify({}),
+            })
+        )
+    }
 
-    failToken() {}
+    async failToken(token: string) {
+        return this.client.send(
+            new SendTaskSuccessCommand({
+                taskToken: token,
+                output: JSON.stringify({}),
+            })
+        )
+    }
 }
