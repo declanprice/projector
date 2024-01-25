@@ -1,4 +1,4 @@
-import { DefinitionBody, LogLevel, StateMachine, StateMachineType, Succeed } from 'aws-cdk-lib/aws-stepfunctions'
+import { DefinitionBody, Fail, LogLevel, StateMachine, StateMachineType, Succeed } from 'aws-cdk-lib/aws-stepfunctions'
 import { Construct } from 'constructs'
 import { CommandHandler } from '../command'
 import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks'
@@ -40,11 +40,33 @@ export class Saga extends Construct {
     }
 
     create() {
-        const start = new LambdaInvoke(this, 'StepOneInvoke', { lambdaFunction: this.steps[0].invoke })
+        if (!this.steps.length) throw new Error('SagaHandler must have at least one valid step.')
+
+        const successInvokes: LambdaInvoke[] = []
 
         const success = new Succeed(this, 'Success')
 
-        start.next(success)
+        const fail = new Fail(this, 'Fail')
+
+        let counter = 0
+
+        for (const step of this.steps) {
+            console.log(step.stepName)
+
+            const invoke = new LambdaInvoke(this, `${step.stepName}-Invoke`, {
+                lambdaFunction: step.invoke,
+            })
+
+            successInvokes.push(invoke)
+
+            if (counter > 0) {
+                successInvokes[counter - 1].next(invoke)
+            }
+
+            counter++
+        }
+
+        successInvokes[successInvokes.length - 1].next(success)
 
         const stateMachine = new StateMachine(this, `${this.id}-StateMachine`, {
             stateMachineName: `${this.id}`,
@@ -56,7 +78,7 @@ export class Saga extends Construct {
                 level: LogLevel.ALL,
             },
             removalPolicy: RemovalPolicy.DESTROY,
-            definitionBody: DefinitionBody.fromChainable(start),
+            definitionBody: DefinitionBody.fromChainable(successInvokes[0]),
         })
 
         stateMachine.grantStartSyncExecution(this.props.startBy)

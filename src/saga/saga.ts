@@ -1,4 +1,4 @@
-import { SFNClient, StartSyncExecutionCommand } from '@aws-sdk/client-sfn'
+import { SFNClient, StartSyncExecutionCommand, SyncExecutionStatus } from '@aws-sdk/client-sfn'
 import { createStateMachineArn } from '../util/sfn-utils'
 
 export class Saga {
@@ -6,8 +6,8 @@ export class Saga {
 
     constructor(readonly stateMachineName: string) {}
 
-    startSync(input: any) {
-        return this.client.send(
+    async startSync(input: any): Promise<any | null> {
+        const response = await this.client.send(
             new StartSyncExecutionCommand({
                 stateMachineArn: createStateMachineArn(this.stateMachineName),
                 input: JSON.stringify({
@@ -16,6 +16,17 @@ export class Saga {
                 }),
             })
         )
+
+        if (response.status === SyncExecutionStatus.FAILED) {
+            throw new Error(response.cause)
+        }
+
+        if (response.output) {
+            const parsedOutput = JSON.parse(response.output)
+            return parsedOutput?.Payload || null
+        }
+
+        return null
     }
 
     start() {}
