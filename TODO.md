@@ -1,4 +1,3 @@
-- subscription handler
 - express/regular saga with step functions
 - idempotency checks across the board
 - resource naming conventions
