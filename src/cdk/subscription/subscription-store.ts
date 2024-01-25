@@ -19,5 +19,17 @@ export class SubscriptionStore extends Table {
             removalPolicy: RemovalPolicy.DESTROY,
             ...props,
         })
+
+        this.addGlobalSecondaryIndex({
+            indexName: 'lookupKey-index',
+            partitionKey: {
+                type: AttributeType.STRING,
+                name: 'lookupKey',
+            },
+            sortKey: {
+                type: AttributeType.STRING,
+                name: 'type',
+            },
+        })
     }
 }

@@ -41,6 +41,9 @@ export class SubscriptionApi extends WebSocketApi {
             timeout: Duration.seconds(100),
             entry: '../src/cdk/subscription/subscription-api-connect.handler.ts',
             handler: 'subscriptionApiConnectHandler',
+            environment: {
+                SUBSCRIPTION_STORE_NAME: subscriptionStore.tableName,
+            },
         })
 
         subscriptionStore.grantReadWriteData(onConnectFunction)
@@ -52,6 +55,9 @@ export class SubscriptionApi extends WebSocketApi {
             timeout: Duration.seconds(100),
             entry: '../src/cdk/subscription/subscription-api-disconnect.handler.ts',
             handler: 'subscriptionApiDisconnectHandler',
+            environment: {
+                SUBSCRIPTION_STORE_NAME: subscriptionStore.tableName,
+            },
         })
 
         subscriptionStore.grantReadWriteData(onDisconnectFunction)

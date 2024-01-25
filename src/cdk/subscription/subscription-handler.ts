@@ -31,7 +31,7 @@ export class SubscriptionHandler extends NodejsFunction {
             ...props,
         })
 
-        this.addEnvironment('SUBSCRIPTION_API_ENDPOINT', props.subscriptionApi.apiEndpoint)
+        this.addEnvironment('SUBSCRIPTION_API_ENDPOINT', this.apiEndpoint(props.subscriptionApi.apiId))
         this.addEnvironment('SUBSCRIPTION_STORE_NAME', props.subscriptionStore.tableName)
 
         const { subscriptionApi, subscriptionStore, subscriptionBus } = props
@@ -63,5 +63,9 @@ export class SubscriptionHandler extends NodejsFunction {
                 },
             })
         )
+    }
+
+    private apiEndpoint(apiId: string): string {
+        return `${apiId}.execute-api.${Stack.of(this).region}.amazonaws.com/prod`
     }
 }

@@ -7,7 +7,11 @@ export class SubscriptionItem<Filter> extends StoreItem {
         readonly lookupKey: string,
         readonly filter: Filter
     ) {
-        super(connectionId, `Subscription|${type}|${lookupKey}`)
+        super(connectionId, SubscriptionItem.createSk(type, lookupKey))
+    }
+
+    static createSk(type: string, lookupKey: string) {
+        return `Subscription|${type}|${lookupKey}`
     }
 
     fromItem(item: any): any {

@@ -22,13 +22,10 @@ type SortKeyCondition =
     | BetweenExpressionPredicate
     | BeginsWithPredicate
 
-export class StoreQueryBuilder<I extends StoreItem> {
+export class StoreQueryBuilder {
     private readonly client = new DynamoDBClient()
 
-    constructor(
-        private readonly type: Type<I>,
-        private readonly tableName: string
-    ) {}
+    constructor(private readonly tableName: string) {}
 
     private readonly query: {
         using?: string
@@ -49,17 +46,17 @@ export class StoreQueryBuilder<I extends StoreItem> {
         expressionAttributes: new ExpressionAttributes(),
     }
 
-    using(index: string): StoreQueryBuilder<I> {
+    using(index: string): StoreQueryBuilder {
         this.query.using = index
         return this
     }
 
-    consistent(consistent: boolean): StoreQueryBuilder<I> {
+    consistent(consistent: boolean): StoreQueryBuilder {
         this.query.consistent = consistent
         return this
     }
 
-    pk(name: string, value: string | number): StoreQueryBuilder<I> {
+    pk(name: string, value: string | number): StoreQueryBuilder {
         this.query.pk = {
             name: this.query.expressionAttributes.addName(name),
             value: this.query.expressionAttributes.addValue(value),
@@ -68,7 +65,7 @@ export class StoreQueryBuilder<I extends StoreItem> {
         return this
     }
 
-    sk(name: string, condition: SortKeyCondition): StoreQueryBuilder<I> {
+    sk(name: string, condition: SortKeyCondition): StoreQueryBuilder {
         this.query.sk = {
             name,
             condition,
@@ -77,22 +74,22 @@ export class StoreQueryBuilder<I extends StoreItem> {
         return this
     }
 
-    limit(limit: number): StoreQueryBuilder<I> {
+    limit(limit: number): StoreQueryBuilder {
         this.query.limit = limit
         return this
     }
 
-    startAt(key: Record<string, AttributeValue>): StoreQueryBuilder<I> {
+    startAt(key: Record<string, AttributeValue>): StoreQueryBuilder {
         this.query.startAt = key
         return this
     }
 
-    sort(direction: 'asc' | 'desc'): StoreQueryBuilder<I> {
+    sort(direction: 'asc' | 'desc'): StoreQueryBuilder {
         this.query.sort = direction
         return this
     }
 
-    async exec(): Promise<{ data: I[]; lastEvaluatedKey: Record<string, AttributeValue> | undefined }> {
+    async exec(): Promise<{ data: StoreItem[]; lastEvaluatedKey: Record<string, AttributeValue> | undefined }> {
         const getSkCondition = (sk: { name: string; condition: SortKeyCondition }): string => {
             const name = this.query.expressionAttributes.addName(sk.name)
 
@@ -151,7 +148,7 @@ export class StoreQueryBuilder<I extends StoreItem> {
         }
 
         return {
-            data: result.Items.map((i) => new this.type().fromItem(unmarshall(i))) as I[],
+            data: result.Items.map((i) => unmarshall(i)) as StoreItem[],
             lastEvaluatedKey: result.LastEvaluatedKey,
         }
     }

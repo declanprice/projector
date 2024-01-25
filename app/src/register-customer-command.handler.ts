@@ -25,15 +25,17 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
     readonly subscriptionBus = new SubscriptionBus()
 
     async handle(command: Output<typeof RegisterCustomerSchema>) {
-        const customerId = v4()
+        const customerId = '123'
         const scheduledTaskId = v4()
 
         const customer = new Customer(customerId, 'Declan', 'Price', scheduledTaskId)
+
         const event = new CustomerRegisteredEvent(customer.customerId)
 
         await this.subscriptionBus.emit(
             new CustomerSubscriptionUpdate(customer.customerId, customer.firstName, customer.lastName)
         )
+
         // await commit(this.store.save(customer), this.outbox.publish(event))
     }
 }

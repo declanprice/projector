@@ -1,6 +1,6 @@
-import { APIGatewayProxyEventV2 } from 'aws-lambda'
+import { APIGatewayProxyEvent } from 'aws-lambda'
 
-export const subscriptionApiDefaultHandler = async (event: APIGatewayProxyEventV2) => {
+export const subscriptionApiDefaultHandler = async (event: APIGatewayProxyEvent) => {
     console.log(`[ON DEFAULT EVENT] - ${JSON.stringify(event, null, 2)})`)
 
     return {

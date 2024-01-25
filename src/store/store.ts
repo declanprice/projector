@@ -1,10 +1,4 @@
-import {
-    DeleteItemCommand,
-    DynamoDBClient,
-    GetItemCommand,
-    PutItemCommand,
-    TransactWriteItem,
-} from '@aws-sdk/client-dynamodb'
+import { DynamoDBClient, GetItemCommand, TransactWriteItem } from '@aws-sdk/client-dynamodb'
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import { StoreQueryBuilder } from './store-query-builder'
 import { Type } from '../util/type'
@@ -15,8 +9,8 @@ export class Store {
 
     constructor(private readonly tableName: string) {}
 
-    query<I extends StoreItem>(type: Type<I>): StoreQueryBuilder<I> {
-        return new StoreQueryBuilder<I>(type, this.tableName)
+    query(): StoreQueryBuilder {
+        return new StoreQueryBuilder(this.tableName)
     }
 
     async get<I extends StoreItem>(type: Type<I>, pk: string, sk?: string | number): Promise<I | null> {
@@ -45,14 +39,7 @@ export class Store {
         return {
             Put: {
                 TableName: this.tableName,
-                Item: marshall(
-                    {
-                        ...item,
-                        pk: item.pk,
-                        sk: item.sk,
-                    },
-                    { convertClassInstanceToMap: true, removeUndefinedValues: true }
-                ),
+                Item: marshall(item, { convertClassInstanceToMap: true, removeUndefinedValues: true }),
                 ConditionExpression: 'attribute_not_exists(pk)',
             },
         }
@@ -62,14 +49,7 @@ export class Store {
         return {
             Put: {
                 TableName: this.tableName,
-                Item: marshall(
-                    {
-                        ...item,
-                        pk: item.pk,
-                        sk: item.sk,
-                    },
-                    { convertClassInstanceToMap: true, removeUndefinedValues: true }
-                ),
+                Item: marshall(item, { convertClassInstanceToMap: true, removeUndefinedValues: true }),
             },
         }
     }
