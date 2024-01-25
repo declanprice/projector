@@ -34,8 +34,8 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
             Update: {
                 TableName: OUTBOX_STORE_NAME,
                 Key: {
-                    id: {
-                        S: item.id,
+                    pk: {
+                        S: item.pk,
                     },
                 },
                 UpdateExpression: 'SET #status = :status',

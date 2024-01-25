@@ -9,7 +9,7 @@ import { SubscriptionBus } from '../../src/subscription/subscription-bus'
     batchSize: 10,
 })
 export class CustomerProjectionChangeHandler {
-    readonly store = new Store('CustomerProjection')
+    readonly store = new Store('Projections')
     readonly subscriptionBus = new SubscriptionBus('SubscriptionBus')
 
     @ChangeHandler(Customer, ChangeType.INSERT)
