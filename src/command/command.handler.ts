@@ -23,7 +23,9 @@ export const commandHandler = async (classInstance: HandleCommand, event: APIGat
         const message: Command<any> = {
             invocationType: CommandInvocationType.SAGA,
             timestamp: new Date().toISOString(),
-            metadata: {},
+            metadata: {
+                taskToken: event?.taskToken,
+            },
             data: event?.input || {},
         }
 

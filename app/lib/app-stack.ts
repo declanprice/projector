@@ -95,12 +95,12 @@ export class AppStack extends cdk.Stack {
 
         const saga = new Saga(this, 'SagaHandler', {
             startBy: registerCustomer,
-            express: true,
         })
 
         saga.step('StepOne', {
             invoke: stepOne,
             compensate: errorStepOne,
+            waitForTask: true,
         })
 
         saga.step('StepTwo', {

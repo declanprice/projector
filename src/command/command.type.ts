@@ -6,7 +6,7 @@ export enum CommandInvocationType {
 export type Command<Data = {}> = {
     invocationType: CommandInvocationType
     metadata: {
-        waitForToken?: string
+        taskToken?: string
     }
     data: Data
     timestamp: string

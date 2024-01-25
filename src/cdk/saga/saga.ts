@@ -1,12 +1,4 @@
-import {
-    DefinitionBody,
-    Fail,
-    JsonPath,
-    LogLevel,
-    StateMachine,
-    StateMachineType,
-    Succeed,
-} from 'aws-cdk-lib/aws-stepfunctions'
+import { DefinitionBody, Fail, LogLevel, StateMachine, StateMachineType, Succeed } from 'aws-cdk-lib/aws-stepfunctions'
 import { Construct } from 'constructs'
 import { CommandHandler } from '../command'
 import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks'
@@ -121,6 +113,7 @@ export class Saga extends Construct {
             logs: {
                 destination: new LogGroup(this, `${this.id}-Logs`, {
                     logGroupName: `${this.id}-Logs`,
+                    removalPolicy: RemovalPolicy.DESTROY,
                 }),
                 level: LogLevel.ALL,
             },
