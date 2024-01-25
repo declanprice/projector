@@ -16,6 +16,7 @@ export const QueryHandler = (props: QueryHandlerDecoratorProps): ClassDecorator 
         Reflect.defineMetadata(QUERY_HANDLER_METADATA, props, constructor)
 
         constructor.prototype.queryHandler = (event: APIGatewayProxyEventV2 | SQSEvent) => {
+            console.log(`[QUERY HANDLER EVENT] - ${JSON.stringify(event, null, 2)}`)
             return queryHandler(new constructor(), props, event)
         }
     }

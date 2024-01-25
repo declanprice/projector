@@ -14,6 +14,8 @@ import {
     SubscriptionHandler,
     SubscriptionApi,
     SubscriptionStore,
+    QueryHandler,
+    ProjectionStore,
 } from '../../src/cdk'
 import { RegisterCustomerCommandHandler } from '../src/register-customer-command.handler'
 import { CustomerSubscriptionHandler } from '../src/customer-subscription.handler'
@@ -21,6 +23,7 @@ import { Saga } from '../../src/cdk/saga/saga'
 import { StepOneHandler, StepThreeHandler, StepTwoHandler } from '../src/saga/success-steps'
 import { ErrorStepOneHandler, ErrorStepTwoHandler } from '../src/saga/error-steps'
 import { SendTokenHandler } from '../src/saga/send-token.handler'
+import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id-query.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -37,32 +40,29 @@ export class AppStack extends cdk.Stack {
             subscriptionStore,
         })
 
-        const aggregateStore = new AggregateStore(this, 'Aggregates')
-        new AggregateStorePublisher(this, 'AggregatesPublisher', {
-            eventBus,
-            aggregateStore,
-        })
-
-        const schedulerStore = new SchedulerStore(this, 'Scheduler')
-        new SchedulerStorePublisher(this, 'SchedulerPublisher', {
-            eventBus,
-            schedulerStore,
-        })
-
-        const outboxStore = new OutboxStore(this, 'Outbox')
-        new OutboxStorePublisher(this, 'OutboxPublisher', {
-            eventBus,
-            outboxStore,
-        })
+        // const aggregateStore = new AggregateStore(this, 'Aggregates')
+        // new AggregateStorePublisher(this, 'AggregatesPublisher', {
+        //     eventBus,
+        //     aggregateStore,
+        // })
+        //
+        // const schedulerStore = new SchedulerStore(this, 'Scheduler')
+        // new SchedulerStorePublisher(this, 'SchedulerPublisher', {
+        //     eventBus,
+        //     schedulerStore,
+        // })
+        //
+        // const outboxStore = new OutboxStore(this, 'Outbox')
+        // new OutboxStorePublisher(this, 'OutboxPublisher', {
+        //     eventBus,
+        //     outboxStore,
+        // })
 
         // const projectionStore = new ProjectionStore(this, 'Projections')
 
         /** Handlers **/
         const registerCustomer = new CommandHandler(this, RegisterCustomerCommandHandler, {
             handlerApi,
-            aggregateStore,
-            schedulerStore,
-            outboxStore,
             subscriptionBus,
             entry: 'src/register-customer-command.handler.ts',
         })
@@ -120,11 +120,12 @@ export class AppStack extends cdk.Stack {
 
         saga.create()
 
-        // new QueryHandler(this, GetCustomerByIdQueryHandler, {
-        //     handlerApi,
-        //     projectionStores: [customerProjection],
-        //     entry: 'src/get-customer-by-id-query.handler.ts',
-        // })
+        new QueryHandler(this, GetCustomerByIdQueryHandler, {
+            handlerApi,
+            projectionStores: [],
+            entry: 'src/get-customer-by-id-query.handler.ts',
+        })
+
         //
         // new ChangeHandler(this, CustomerProjectionChangeHandler, {
         //     eventBus,

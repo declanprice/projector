@@ -1,6 +1,5 @@
 import { AttributeType, Table, TableProps } from 'aws-cdk-lib/aws-dynamodb'
 import { Construct } from 'constructs'
-import { Type } from '../../util/type'
 import { RemovalPolicy } from 'aws-cdk-lib'
 
 type ProjectionStoreProps = {} & Partial<TableProps>
@@ -11,7 +10,7 @@ export class ProjectionStore extends Table {
             tableName: id,
             partitionKey: {
                 type: AttributeType.STRING,
-                name: 'id',
+                name: 'pk',
             },
             removalPolicy: RemovalPolicy.DESTROY,
             ...props,

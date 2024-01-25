@@ -10,7 +10,7 @@ export class OutboxStore extends Table {
             tableName: id,
             partitionKey: {
                 type: AttributeType.STRING,
-                name: 'id',
+                name: 'pk',
             },
             stream: StreamViewType.NEW_IMAGE,
             removalPolicy: RemovalPolicy.DESTROY,

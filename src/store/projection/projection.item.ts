@@ -6,8 +6,4 @@ export abstract class ProjectionItem extends StoreItem {
     constructor(readonly id: string) {
         super(id)
     }
-
-    get sk(): string {
-        return this.constructor.name
-    }
 }
