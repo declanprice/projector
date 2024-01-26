@@ -76,8 +76,6 @@ export const removeSubscriptionHandler = async (
     props: SubscriptionHandlerProps,
     event: APIGatewayProxyEvent
 ) => {
-    console.log('subscription remove handler')
-
     const connectionId = event.requestContext.connectionId!
     const body = JSON.parse(event?.body || '')
     const filter = body?.filter || {}
@@ -106,10 +104,6 @@ export const subscriptionHandler = async (
     props: SubscriptionHandlerProps,
     event: SNSEvent
 ) => {
-    console.log('subscription handler')
-
-    console.log('endpoint', SUBSCRIPTION_API_ENDPOINT)
-
     for (const record of event.Records) {
         const body = JSON.parse(record.Sns.Message)
         const data = body.data

@@ -18,6 +18,7 @@ export const EventHandlerGroup = (props: EventHandlerProps): ClassDecorator => {
         Reflect.defineMetadata(EVENT_HANDLER_GROUP, props, constructor)
 
         constructor.prototype.eventHandler = (event: SQSEvent) => {
+            console.log(`[EVENT HANDLER EVENT] - ${JSON.stringify(event, null, 2)}`)
             return eventHandler(new constructor(), props, event)
         }
     }

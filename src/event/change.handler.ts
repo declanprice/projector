@@ -3,8 +3,6 @@ import { ChangeHandlerGroupProps, getChangeHandlerMethod } from './change-handle
 import { ChangeMessage } from './change-event.type'
 
 export const changeHandler = async (instance: any, props: ChangeHandlerGroupProps, event: SQSEvent) => {
-    console.log(event)
-
     for (const record of event.Records) {
         const body = JSON.parse(record.body) as EventBridgeEvent<any, ChangeMessage<any>>
 

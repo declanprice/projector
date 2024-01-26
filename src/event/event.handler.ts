@@ -3,8 +3,6 @@ import { EventHandlerProps, getEventHandlerProps } from './event-handler.decorat
 import { EventMessage } from './event-bus-message.type'
 
 export const eventHandler = async (instance: any, props: EventHandlerProps, event: SQSEvent) => {
-    console.log(event)
-
     for (const record of event.Records) {
         const body = JSON.parse(record.body) as EventBridgeEvent<any, EventMessage<any>>
 

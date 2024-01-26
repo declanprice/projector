@@ -19,6 +19,7 @@ export const ChangeHandlerGroup = (props: ChangeHandlerGroupProps): ClassDecorat
         Reflect.defineMetadata(CHANGE_HANDLER_GROUP, props, constructor)
 
         constructor.prototype.changeHandler = (event: SQSEvent) => {
+            console.log(`[CHANGE HANDLER EVENT] - ${JSON.stringify(event, null, 2)}`)
             return changeHandler(new constructor(), props, event)
         }
     }

@@ -27,8 +27,6 @@ import { SendTokenHandler } from '../src/saga/send-token.handler'
 import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id-query.handler'
 import { CustomerProjectionChangeHandler } from '../src/customer-projection-change.handler'
 import { SagaDefinition } from '../../src/cdk/saga/saga-definition'
-import { DefinitionBody } from 'aws-cdk-lib/aws-stepfunctions'
-import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
