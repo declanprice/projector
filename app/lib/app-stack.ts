@@ -26,6 +26,9 @@ import { ErrorStepOneHandler, ErrorStepTwoHandler } from '../src/saga/error-step
 import { SendTokenHandler } from '../src/saga/send-token.handler'
 import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id-query.handler'
 import { CustomerProjectionChangeHandler } from '../src/customer-projection-change.handler'
+import { SagaDefinition } from '../../src/cdk/saga/saga-definition'
+import { DefinitionBody } from 'aws-cdk-lib/aws-stepfunctions'
+import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -104,26 +107,27 @@ export class AppStack extends cdk.Stack {
             entry: 'src/saga/error-steps.ts',
         })
 
-        const saga = new Saga(this, 'SagaHandler', {
-            startBy: registerCustomer,
-            allowSendToken: [sendToken],
-        })
+        const sagaDefinition = new SagaDefinition(this, 'SagaDefinition')
 
-        saga.step('StepOne', {
+        sagaDefinition.step('StepOne', {
             invoke: stepOne,
             compensate: errorStepOne,
         })
 
-        saga.step('StepTwo', {
+        sagaDefinition.step('StepTwo', {
             invoke: stepTwo,
             compensate: errorStepTwo,
         })
 
-        saga.step('StepThree', {
+        sagaDefinition.step('StepThree', {
             invoke: stepThree,
         })
 
-        saga.create()
+        new Saga(this, 'SagaHandler', {
+            startBy: registerCustomer,
+            allowSendToken: [sendToken],
+            definitionBody: sagaDefinition.create(),
+        })
 
         new QueryHandler(this, GetCustomerByIdQueryHandler, {
             handlerApi,
