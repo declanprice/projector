@@ -4,7 +4,7 @@ export enum ChangeType {
     REMOVE = 'REMOVE',
 }
 
-export type ChangeEvent<Data> = {
+export type ChangeMessage<Data> = {
     id: string
     change: ChangeType
     type: string

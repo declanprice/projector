@@ -3,7 +3,7 @@ import { EventBridgeClient, PutEventsCommand, PutEventsRequestEntry } from '@aws
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { DynamoDBClient, TransactWriteItem, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb'
 import { OutboxItem, OutboxItemStatus } from '../../store/outbox/outbox.item'
-import { EventBusMessage } from '../../event'
+import { EventMessage } from '../../event'
 
 const eventBridgeClient = new EventBridgeClient()
 const dynamoClient = new DynamoDBClient()
@@ -16,7 +16,7 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
     const outboxItemsToUpdate: TransactWriteItem[] = []
 
     const forwardOutboxItem = (item: OutboxItem) => {
-        const message: EventBusMessage<any> = {
+        const message: EventMessage<any> = {
             messageId: item.id,
             type: item.event.type,
             data: item.event,

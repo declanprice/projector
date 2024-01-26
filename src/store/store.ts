@@ -54,7 +54,7 @@ export class Store {
         }
     }
 
-    delete<I extends StoreItem>(pk: string, sk?: string | number): TransactWriteItem {
+    delete(pk: string, sk?: string | number): TransactWriteItem {
         return {
             Delete: {
                 TableName: this.tableName,

@@ -1,4 +1,4 @@
-- express/regular saga with step functions
+- sagas
 - idempotency checks across the board
 - resource naming conventions
 - error handling

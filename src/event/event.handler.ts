@@ -1,12 +1,12 @@
 import { EventBridgeEvent, SQSEvent } from 'aws-lambda'
 import { EventHandlerProps, getEventHandlerProps } from './event-handler.decorator'
-import { EventBusMessage } from './event-bus-message.type'
+import { EventMessage } from './event-bus-message.type'
 
 export const eventHandler = async (instance: any, props: EventHandlerProps, event: SQSEvent) => {
     console.log(event)
 
     for (const record of event.Records) {
-        const body = JSON.parse(record.body) as EventBridgeEvent<any, EventBusMessage<any>>
+        const body = JSON.parse(record.body) as EventBridgeEvent<any, EventMessage<any>>
 
         const { detail } = body
 

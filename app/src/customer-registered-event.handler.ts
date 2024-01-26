@@ -1,13 +1,9 @@
-import { EventBusMessage, EventHandler, EventHandlerGroup } from '../../src/event'
-import { EventItem } from '../../src/store/event/event.item'
+import { EventMessage, EventHandler, EventHandlerGroup } from '../../src/event'
+import { Event } from '../../src/store/event/event'
 
-export class CustomerRegisteredEvent extends EventItem {
+export class CustomerRegisteredEvent extends Event {
     constructor(readonly customerId: string) {
-        super(customerId)
-    }
-
-    fromItem(item: any): any {
-        return new CustomerRegisteredEvent(item.customerId)
+        super()
     }
 }
 
@@ -16,7 +12,7 @@ export class CustomerRegisteredEvent extends EventItem {
 })
 export class CustomerRegisteredEventHandler {
     @EventHandler(CustomerRegisteredEvent)
-    onRegistered(event: EventBusMessage<CustomerRegisteredEvent>) {
+    onRegistered(event: EventMessage<CustomerRegisteredEvent>) {
         console.log('handling customer registered event', event)
     }
 }

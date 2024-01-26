@@ -3,7 +3,7 @@ import { v4 } from 'uuid'
 import { OutboxItem, OutboxItemStatus } from './outbox.item'
 import { isClass } from '../../util/is-class'
 import { Store } from '../store'
-import { EventItem } from '../event/event.item'
+import { Event } from '../event/event'
 
 export class OutboxStore {
     readonly OUTBOX_STORE_NAME = process.env.OUTBOX_STORE_NAME as string
@@ -14,7 +14,7 @@ export class OutboxStore {
         this.store = new Store(tableName ?? this.OUTBOX_STORE_NAME)
     }
 
-    publish(event: EventItem): TransactWriteItem {
+    publish(event: Event): TransactWriteItem {
         if (!isClass(event)) throw new Error('event must be a valid class')
 
         const id = v4()

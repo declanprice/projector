@@ -10,7 +10,7 @@ export class Customer extends AggregateItem {
         super(customerId)
     }
 
-    fromItem(item: any): Customer {
+    fromItem(item: any): any {
         return new Customer(item.customerId, item.firstName, item.lastName, item.scheduledTaskId)
     }
 }

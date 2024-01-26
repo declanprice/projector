@@ -23,7 +23,7 @@ type SubscriptionHandlerProps = {
 } & Partial<NodejsFunction>
 
 export class SubscriptionApiAuthorizerHandler extends NodejsFunction {
-    constructor(scope: Construct, handler: Type<HandleSubscription<any, any>>, props: SubscriptionHandlerProps) {
+    constructor(scope: Construct, handler: Type<HandleSubscription>, props: SubscriptionHandlerProps) {
         super(scope, handler.name, {
             functionName: handler.name,
             entry: path.join(__dirname, './subscription-api-authorizer.handler.ts'),

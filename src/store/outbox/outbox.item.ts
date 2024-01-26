@@ -1,5 +1,5 @@
 import { StoreItem } from '../store.item'
-import { EventItem } from '../event/event.item'
+import { Event } from '../event/event'
 
 export enum OutboxItemStatus {
     PENDING = 'PENDING',
@@ -10,7 +10,7 @@ export class OutboxItem extends StoreItem {
     constructor(
         readonly id: string,
         readonly status: OutboxItemStatus,
-        readonly event: EventItem
+        readonly event: Event
     ) {
         super(id)
     }

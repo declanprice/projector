@@ -29,8 +29,8 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
     async handle(command: Output<typeof RegisterCustomerSchema>) {
         const customerId = v4()
         const scheduledTaskId = v4()
-        const customer = new Customer(customerId, 'Declan', 'Price', scheduledTaskId)
-        const event = new CustomerRegisteredEvent(customer.customerId)
+        const customer = new Customer(customerId, 'Dec', 'Price', scheduledTaskId)
+        const event = new CustomerRegisteredEvent(customerId)
         await commit(this.store.save(customer), this.outbox.publish(event))
     }
 }

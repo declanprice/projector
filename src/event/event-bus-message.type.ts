@@ -7,7 +7,7 @@ export const EventBusMessageSchema = object({
     data: object({}),
 })
 
-export type EventBusMessage<Data> = {
+export type EventMessage<Data> = {
     messageId: string
     type: string
     timestamp: string

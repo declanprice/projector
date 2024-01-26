@@ -83,26 +83,25 @@ export class Saga extends Construct {
 
                 if (counter > 0) {
                     successInvokes[counter - 1].next(invoke)
-
-                    const compensate = this.steps[counter - 1].compensate
-
-                    if (compensate) {
-                        const compensateInvoke = new LambdaInvoke(this, `${compensate.functionName}-Invoke`, {
-                            lambdaFunction: compensate,
-                            resultSelector: {
-                                isStateMachine: true,
-                                'input.$': '$$.Execution.Input.input',
-                                'taskToken.$': step?.waitForTask === true ? '$$.Task.Token' : undefined,
-                            },
-                        })
-
-                        failInvokes.push(compensateInvoke)
-
-                        invoke.addCatch(compensateInvoke, { resultPath: JsonPath.DISCARD })
-                    }
                 }
 
                 counter++
+
+                const compensate = step.compensate
+
+                if (compensate) {
+                    const compensateInvoke = new LambdaInvoke(this, `${compensate.functionName}-Invoke`, {
+                        lambdaFunction: compensate,
+                        resultSelector: {
+                            isStateMachine: true,
+                            'input.$': '$$.Execution.Input.input',
+                        },
+                    })
+
+                    failInvokes.push(compensateInvoke)
+
+                    invoke.addCatch(compensateInvoke, { resultPath: JsonPath.DISCARD })
+                }
             }
 
             successInvokes[successInvokes.length - 1].next(success)
@@ -113,10 +112,17 @@ export class Saga extends Construct {
 
             let counter = 0
 
+            // chain fail invokes together fail three > fail two > fail one.
             for (const failInvoke of failInvokes) {
-                if (counter === failInvokes.length - 1) continue
-                failInvokes[counter + 1].next(failInvoke)
+                if (failInvokes[counter + 1] !== undefined) {
+                    failInvokes[counter + 1].next(failInvoke)
+                }
                 counter++
+            }
+
+            // attach catch to first available failInvoke
+            // (successThree > failThree) or (successThree > failTwo > failOne)
+            for (const successInvoke of successInvokes) {
             }
 
             failInvokes[0].next(fail)

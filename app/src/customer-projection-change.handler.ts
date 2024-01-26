@@ -1,6 +1,6 @@
 import { Customer } from './customer.aggregate'
 import { CustomerProjection } from './customer.projection'
-import { ChangeEvent, ChangeHandler, ChangeHandlerGroup, ChangeType } from '../../src/event'
+import { ChangeMessage, ChangeHandler, ChangeHandlerGroup, ChangeType } from '../../src/event'
 import { Store } from '../../src/store/store'
 import { commit } from '../../src/store/store-operations'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
@@ -13,7 +13,7 @@ export class CustomerProjectionChangeHandler {
     readonly subscriptionBus = new SubscriptionBus('SubscriptionBus')
 
     @ChangeHandler(Customer, ChangeType.INSERT)
-    async onCreate(change: ChangeEvent<Customer>) {
+    async onCreate(change: ChangeMessage<Customer>) {
         console.log('INSERT CHANGE', change)
         const projection = new CustomerProjection(change.data.customerId, change.data.firstName, change.data.lastName)
         await commit(this.store.save(projection))
@@ -21,14 +21,14 @@ export class CustomerProjectionChangeHandler {
     }
 
     @ChangeHandler(Customer, ChangeType.MODIFY)
-    async onUpdate(change: ChangeEvent<Customer>) {
+    async onUpdate(change: ChangeMessage<Customer>) {
         console.log('MODIFY CHANGE', change)
         const projection = new CustomerProjection(change.data.customerId, change.data.firstName, change.data.lastName)
         await commit(this.store.save(projection))
     }
 
     @ChangeHandler(Customer, ChangeType.REMOVE)
-    async onDelete(change: ChangeEvent<Customer>) {
+    async onDelete(change: ChangeMessage<Customer>) {
         console.log('REMOVE CHANGE', change)
         await commit(this.store.delete(change.data.customerId))
     }

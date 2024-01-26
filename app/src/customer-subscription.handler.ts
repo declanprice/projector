@@ -1,13 +1,15 @@
 import { HandleSubscription, SubscriptionHandler } from '../../src/subscription'
-import { object, Output, string } from 'valibot'
+import { object, optional, Output, string } from 'valibot'
 
 const CustomerSubscriptionFilterSchema = object({
     customerId: string(),
+    firstName: optional(string()),
+    lastName: optional(string()),
 })
 
 type CustomerSubscriptionFilter = Output<typeof CustomerSubscriptionFilterSchema>
 
-export type CustomerSubscriptionUpdate = {
+type CustomerUpdate = {
     customerId: string
     firstName: string
     lastName: string
@@ -19,11 +21,11 @@ export type CustomerSubscriptionUpdate = {
     filterSchema: CustomerSubscriptionFilterSchema,
 })
 export class CustomerSubscriptionHandler implements HandleSubscription {
-    filter(update: CustomerSubscriptionUpdate, filter: CustomerSubscriptionFilter) {
+    filter(update: CustomerUpdate, filter: CustomerSubscriptionFilter) {
         return true
     }
 
-    async handle(update: CustomerSubscriptionUpdate) {
+    async handle(update: CustomerUpdate) {
         return update
     }
 }

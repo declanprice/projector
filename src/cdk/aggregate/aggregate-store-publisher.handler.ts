@@ -3,7 +3,7 @@ import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { AggregateItem } from '../../store/aggregate/aggregate.item'
 import { EventBridgeClient, PutEventsCommand, PutEventsRequestEntry } from '@aws-sdk/client-eventbridge'
 import { AttributeValue } from 'aws-lambda/trigger/dynamodb-stream'
-import { ChangeEvent, ChangeType } from '../../event'
+import { ChangeMessage, ChangeType } from '../../event'
 
 const client = new EventBridgeClient()
 
@@ -33,7 +33,7 @@ export const aggregateStorePublisherHandler = async (event: DynamoDBStreamEvent)
 
         const data = unmarshall(image as any) as AggregateItem
 
-        const changeEvent: ChangeEvent<any> = {
+        const changeEvent: ChangeMessage<any> = {
             id: data.pk,
             type: data.type,
             change: record.eventName as ChangeType,

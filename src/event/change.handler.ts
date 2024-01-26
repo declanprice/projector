@@ -1,12 +1,12 @@
 import { EventBridgeEvent, SQSEvent } from 'aws-lambda'
 import { ChangeHandlerGroupProps, getChangeHandlerMethod } from './change-handler.decorator'
-import { ChangeEvent } from './change-event.type'
+import { ChangeMessage } from './change-event.type'
 
 export const changeHandler = async (instance: any, props: ChangeHandlerGroupProps, event: SQSEvent) => {
     console.log(event)
 
     for (const record of event.Records) {
-        const body = JSON.parse(record.body) as EventBridgeEvent<any, ChangeEvent<any>>
+        const body = JSON.parse(record.body) as EventBridgeEvent<any, ChangeMessage<any>>
 
         const { detail } = body
 
