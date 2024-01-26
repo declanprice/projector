@@ -54,14 +54,12 @@ export class Saga extends Construct {
 
         const successInvokes: LambdaInvoke[] = []
 
-        const failInvokes: LambdaInvoke[] = []
+        const compensateInvokes: LambdaInvoke[] = []
 
-        const chainInvokes = () => {
+        const chainSuccessInvokes = () => {
             const success = new Succeed(this, 'Success')
 
-            let counter = 0
-
-            for (const step of this.steps) {
+            this.steps.forEach((step) => {
                 const invoke = new LambdaInvoke(this, `${step.invoke.functionName}`, {
                     lambdaFunction: step.invoke,
                     integrationPattern:
@@ -80,13 +78,23 @@ export class Saga extends Construct {
                 })
 
                 successInvokes.push(invoke)
+            })
 
-                if (counter > 0) {
-                    successInvokes[counter - 1].next(invoke)
+            successInvokes.forEach((invoke, index) => {
+                const nextInvoke = successInvokes[index - 1]
+
+                if (nextInvoke) {
+                    nextInvoke.next(invoke)
                 }
+            })
 
-                counter++
+            successInvokes[successInvokes.length - 1].next(success)
+        }
 
+        const chainCompensationInvokes = () => {
+            const fail = new Fail(this, 'Fail')
+
+            this.steps.forEach((step) => {
                 const compensate = step.compensate
 
                 if (compensate) {
@@ -98,39 +106,36 @@ export class Saga extends Construct {
                         },
                     })
 
-                    failInvokes.push(compensateInvoke)
-
-                    invoke.addCatch(compensateInvoke, { resultPath: JsonPath.DISCARD })
+                    compensateInvokes.push(compensateInvoke)
                 }
-            }
+            })
 
-            successInvokes[successInvokes.length - 1].next(success)
+            compensateInvokes.forEach((invoke, index) => {
+                const nextInvoke = compensateInvokes[index + 1]
+
+                if (nextInvoke) {
+                    nextInvoke.next(invoke)
+                }
+            })
+
+            compensateInvokes[0].next(fail)
         }
 
-        const chainCompensationInvokes = () => {
-            const fail = new Fail(this, 'Fail')
-
-            let counter = 0
-
-            // chain fail invokes together fail three > fail two > fail one.
-            for (const failInvoke of failInvokes) {
-                if (failInvokes[counter + 1] !== undefined) {
-                    failInvokes[counter + 1].next(failInvoke)
+        const addCatches = () => {
+            successInvokes.forEach((invoke, index) => {
+                const invokes = compensateInvokes.slice(0, index)
+                const firstAvailableCompensation = invokes[invokes.length - 1]
+                if (firstAvailableCompensation) {
+                    invoke.addCatch(firstAvailableCompensation)
                 }
-                counter++
-            }
-
-            // attach catch to first available failInvoke
-            // (successThree > failThree) or (successThree > failTwo > failOne)
-            for (const successInvoke of successInvokes) {
-            }
-
-            failInvokes[0].next(fail)
+            })
         }
 
-        chainInvokes()
+        chainSuccessInvokes()
 
         chainCompensationInvokes()
+
+        addCatches()
 
         const stateMachine = new StateMachine(this, `${this.id}-StateMachine`, {
             stateMachineName: `${this.id}`,
