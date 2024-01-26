@@ -23,7 +23,6 @@ import { CustomerSubscriptionHandler } from '../src/customer-subscription.handle
 import { Saga } from '../../src/cdk/saga/saga'
 import { StepOneHandler, StepThreeHandler, StepTwoHandler } from '../src/saga/success-steps'
 import { ErrorStepOneHandler, ErrorStepTwoHandler } from '../src/saga/error-steps'
-import { SendTokenHandler } from '../src/saga/send-token.handler'
 import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id-query.handler'
 import { CustomerProjectionChangeHandler } from '../src/customer-projection-change.handler'
 import { SagaDefinition } from '../../src/cdk/saga/saga-definition'
@@ -73,11 +72,6 @@ export class AppStack extends cdk.Stack {
             entry: 'src/register-customer-command.handler.ts',
         })
 
-        const sendToken = new CommandHandler(this, SendTokenHandler, {
-            handlerApi,
-            entry: 'src/saga/send-token.handler.ts',
-        })
-
         new SubscriptionHandler(this, CustomerSubscriptionHandler, {
             subscriptionStore,
             subscriptionApi,
@@ -123,7 +117,6 @@ export class AppStack extends cdk.Stack {
 
         new Saga(this, 'SagaHandler', {
             startBy: registerCustomer,
-            allowSendToken: [sendToken],
             definitionBody: sagaDefinition.create(),
         })
 

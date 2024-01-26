@@ -6,7 +6,6 @@ import { LogGroup } from 'aws-cdk-lib/aws-logs'
 
 export type SagaHandlerProps = {
     startBy: CommandHandler
-    allowSendToken?: CommandHandler[]
     express?: boolean
     definitionBody: DefinitionBody
 } & Partial<StateMachineProps>
@@ -27,15 +26,9 @@ export class Saga extends StateMachine {
             },
         })
 
-        const { startBy, allowSendToken } = props
+        const { startBy } = props
 
         this.grantStartSyncExecution(startBy)
         this.grantStartExecution(startBy)
-
-        if (allowSendToken) {
-            for (const allow of allowSendToken) {
-                this.grantTaskResponse(allow)
-            }
-        }
     }
 }
