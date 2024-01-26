@@ -1,7 +1,7 @@
 import { object, Output, string } from 'valibot'
 import { v4 } from 'uuid'
 import { Customer } from './customer.aggregate'
-import { CommandHandler, HandleCommand } from '../../src/command'
+import { Command, CommandHandler, HandleCommand } from '../../src/command'
 import { Store } from '../../src/store/store'
 import { SchedulerStore } from '../../src/store/scheduler/scheduler.store'
 import { OutboxStore } from '../../src/store/outbox/outbox.store'
@@ -26,10 +26,10 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
     readonly subscriptionBus = new SubscriptionBus()
     readonly saga = new Saga('SagaHandler')
 
-    async handle(command: Output<typeof RegisterCustomerSchema>) {
+    async handle(command: Command<Output<typeof RegisterCustomerSchema>>) {
         const customerId = v4()
         const scheduledTaskId = v4()
-        const customer = new Customer(customerId, 'Dec', 'Price', scheduledTaskId)
+        const customer = new Customer(customerId, command.data.firstName, command.data.lastName, scheduledTaskId)
         const event = new CustomerRegisteredEvent(customerId)
         await commit(this.store.save(customer), this.outbox.publish(event))
     }
