@@ -10,7 +10,6 @@ import {
 } from '@aws/dynamodb-expressions'
 import { DynamoDBClient, QueryCommand, AttributeValue } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { Type } from '../util/type'
 import { StoreItem } from './store.item'
 
 type SortKeyCondition =

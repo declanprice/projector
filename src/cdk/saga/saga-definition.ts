@@ -38,8 +38,6 @@ export class SagaDefinition extends Construct {
         const compensateInvokes: LambdaInvoke[] = []
 
         const chainSuccessInvokes = () => {
-            const success = new Succeed(this, 'Success')
-
             this.steps.forEach((step) => {
                 const invoke = new LambdaInvoke(this, `${step.invoke.functionName}`, {
                     lambdaFunction: step.invoke,
@@ -52,6 +50,7 @@ export class SagaDefinition extends Construct {
                         'input.$': '$$.Execution.Input.input',
                         taskToken: step?.waitForTask === true ? JsonPath.taskToken : undefined,
                     }),
+                    retryOnServiceExceptions: true,
                     resultSelector: {
                         isStateMachine: true,
                         'input.$': '$$.Execution.Input.input',
@@ -68,19 +67,16 @@ export class SagaDefinition extends Construct {
                     nextInvoke.next(invoke)
                 }
             })
-
-            successInvokes[successInvokes.length - 1].next(success)
         }
 
         const chainCompensationInvokes = () => {
-            const fail = new Fail(this, 'Fail')
-
             this.steps.forEach((step) => {
                 const compensate = step.compensate
 
                 if (compensate) {
                     const compensateInvoke = new LambdaInvoke(this, `${compensate.functionName}-Invoke`, {
                         lambdaFunction: compensate,
+                        retryOnServiceExceptions: true,
                         resultSelector: {
                             isStateMachine: true,
                             'input.$': '$$.Execution.Input.input',
@@ -98,8 +94,6 @@ export class SagaDefinition extends Construct {
                     nextInvoke.next(invoke)
                 }
             })
-
-            compensateInvokes[0].next(fail)
         }
 
         const addCatches = () => {
@@ -107,7 +101,9 @@ export class SagaDefinition extends Construct {
                 const invokes = compensateInvokes.slice(0, index)
                 const firstAvailableCompensation = invokes[invokes.length - 1]
                 if (firstAvailableCompensation) {
-                    invoke.addCatch(firstAvailableCompensation)
+                    invoke.addCatch(firstAvailableCompensation, {
+                        resultPath: JsonPath.DISCARD,
+                    })
                 }
             })
         }

@@ -23,7 +23,7 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
     readonly store = new Store('Aggregates')
     readonly scheduler = new SchedulerStore('Scheduler')
     readonly outbox = new OutboxStore('Outbox')
-    readonly subscriptionBus = new SubscriptionBus()
+    readonly subscriptionBus = new SubscriptionBus('SubscriptionBus')
     readonly saga = new Saga('SagaHandler')
 
     async handle(command: Command<Output<typeof RegisterCustomerSchema>>) {
@@ -31,6 +31,7 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
         const scheduledTaskId = v4()
         const customer = new Customer(customerId, command.data.firstName, command.data.lastName, scheduledTaskId)
         const event = new CustomerRegisteredEvent(customerId)
-        await commit(this.store.save(customer), this.outbox.publish(event))
+        return this.saga.start(customer)
+        // await commit(this.store.save(customer), this.outbox.publish(event))
     }
 }

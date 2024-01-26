@@ -1,4 +1,3 @@
-import { isClass } from '../util/is-class'
 import { PublishCommand, SNSClient } from '@aws-sdk/client-sns'
 import { createTopicArn } from '../util/sns-utils'
 

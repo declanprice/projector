@@ -121,11 +121,11 @@ export class AppStack extends cdk.Stack {
             invoke: stepThree,
         })
 
-        // new Saga(this, 'SagaHandler', {
-        //     startBy: registerCustomer,
-        //     allowSendToken: [sendToken],
-        //     definitionBody: sagaDefinition.create(),
-        // })
+        new Saga(this, 'SagaHandler', {
+            startBy: registerCustomer,
+            allowSendToken: [sendToken],
+            definitionBody: sagaDefinition.create(),
+        })
 
         new QueryHandler(this, GetCustomerByIdQueryHandler, {
             handlerApi,
