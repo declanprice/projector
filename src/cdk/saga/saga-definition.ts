@@ -9,7 +9,6 @@ type SagaStep = {
 
 type SagaStepOptions = {
     invoke: CommandHandler
-    waitForTask?: boolean
     compensate?: CommandHandler
 }
 
@@ -41,14 +40,10 @@ export class SagaDefinition extends Construct {
             this.steps.forEach((step) => {
                 const invoke = new LambdaInvoke(this, `${step.invoke.functionName}`, {
                     lambdaFunction: step.invoke,
-                    integrationPattern:
-                        step?.waitForTask === true
-                            ? IntegrationPattern.WAIT_FOR_TASK_TOKEN
-                            : IntegrationPattern.REQUEST_RESPONSE,
+                    integrationPattern: IntegrationPattern.REQUEST_RESPONSE,
                     payload: TaskInput.fromObject({
                         isStateMachine: true,
                         'input.$': '$$.Execution.Input.input',
-                        taskToken: step?.waitForTask === true ? JsonPath.taskToken : undefined,
                     }),
                     retryOnServiceExceptions: true,
                     resultSelector: {

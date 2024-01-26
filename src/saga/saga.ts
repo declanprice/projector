@@ -1,4 +1,5 @@
 import {
+    SendTaskFailureCommand,
     SendTaskSuccessCommand,
     SFNClient,
     StartExecutionCommand,
@@ -36,24 +37,6 @@ export class Saga {
                     isStateMachine: true,
                     input,
                 }),
-            })
-        )
-    }
-
-    async successToken(token: string) {
-        return this.client.send(
-            new SendTaskSuccessCommand({
-                taskToken: token,
-                output: JSON.stringify({}),
-            })
-        )
-    }
-
-    async failToken(token: string) {
-        return this.client.send(
-            new SendTaskSuccessCommand({
-                taskToken: token,
-                output: JSON.stringify({}),
             })
         )
     }
