@@ -8,7 +8,7 @@ export class Store {
 
     constructor(private readonly tableName: string) {}
 
-    query<I extends StoreItem>(): StoreQueryBuilder {
+    query<I extends StoreItem>(): StoreQueryBuilder<I> {
         return new StoreQueryBuilder<I>(this.tableName)
     }
 

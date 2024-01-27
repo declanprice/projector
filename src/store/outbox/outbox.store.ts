@@ -12,15 +12,15 @@ export class OutboxStore {
         this.store = new Store(tableName ?? this.OUTBOX_STORE_NAME)
     }
 
-    publish(type: string, data: any): TransactWriteItem {
+    publish(event: Event): TransactWriteItem {
         const id = v4()
 
         const item: OutboxItem = {
             pk: id,
             id,
             status: OutboxItemStatus.PENDING,
-            type,
-            data,
+            type: event.type,
+            data: event,
             timestamp: new Date().toISOString(),
         }
 

@@ -36,13 +36,13 @@ export const getEventHandlerGroupProps = (target: any): EventHandlerProps => {
     return Reflect.getMetadata(EVENT_HANDLER_GROUP, target)
 }
 
-export const EventHandler = (event: Type<Event>): MethodDecorator => {
+export const EventHandler = (type: string): MethodDecorator => {
     return (target: any, propertyKey: string | symbol) => {
-        Reflect.defineMetadata(event.name, propertyKey, target.constructor)
+        Reflect.defineMetadata(type, propertyKey, target.constructor)
 
         const eventNames = getEventHandlerGroupTypes(target.constructor)
 
-        eventNames.push(event.name)
+        eventNames.push(type)
 
         Reflect.defineMetadata(EVENT_HANDLER_GROUP_TYPES, eventNames, target.constructor)
     }
