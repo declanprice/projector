@@ -1,20 +1,12 @@
 import { StoreItem } from '../store.item'
 
-export class SubscriptionItem<Filter> extends StoreItem {
-    constructor(
-        readonly connectionId: string,
-        readonly type: string,
-        readonly lookupKey: string,
-        readonly filter: Filter
-    ) {
-        super(connectionId, SubscriptionItem.createSk(type, lookupKey))
-    }
+export type SubscriptionItem<Filter> = {
+    connectionId: string
+    type: string
+    lookupKey: string
+    filter: Filter
+} & StoreItem
 
-    static createSk(type: string, lookupKey: string) {
-        return `Subscription|${type}|${lookupKey}`
-    }
-
-    fromItem(item: any): any {
-        return new SubscriptionItem(item.connectionId, item.type, item.lookupKey, item.filter)
-    }
+export const subscriptionItemSk = (type: string, lookupKey: string) => {
+    return `Subscription|${type}|${lookupKey}`
 }

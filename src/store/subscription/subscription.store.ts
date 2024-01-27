@@ -1,27 +1,40 @@
 import { Store } from '../store'
-import { SubscriptionConnectionItem } from './subscription-connection.item'
-import { SubscriptionItem } from './subscription.item'
+import { SubscriptionConnectionItem, subscriptionConnectionSk } from './subscription-connection.item'
+import { SubscriptionItem, subscriptionItemSk } from './subscription.item'
 import { equals } from '@aws/dynamodb-expressions'
 
 export class SubscriptionStore {
     readonly store = new Store(process.env.SUBSCRIPTION_STORE_NAME as string)
 
     connect(connectionId: string) {
-        const item = new SubscriptionConnectionItem(connectionId)
+        const item: SubscriptionConnectionItem = {
+            pk: connectionId,
+            sk: subscriptionConnectionSk(),
+            connectionId,
+        }
+
         return this.store.save(item)
     }
 
     disconnect(connectionId: string) {
-        return this.store.delete(connectionId, 'Connection')
+        return this.store.delete(connectionId, subscriptionConnectionSk())
     }
 
     sub(connectionId: string, type: string, lookupKey: string, filter: any) {
-        const item = new SubscriptionItem(connectionId, type, lookupKey, filter)
+        const item: SubscriptionItem<any> = {
+            pk: connectionId,
+            sk: subscriptionItemSk(type, lookupKey),
+            type,
+            connectionId,
+            lookupKey,
+            filter,
+        }
+
         return this.store.save(item)
     }
 
     unsub(connectionId: string, type: string, lookupKey: string) {
-        return this.store.delete(connectionId, SubscriptionItem.createSk(type, lookupKey))
+        return this.store.delete(connectionId, subscriptionItemSk(type, lookupKey))
     }
 
     delete(pk: string, sk?: string | number) {

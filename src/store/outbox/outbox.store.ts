@@ -1,9 +1,7 @@
 import { TransactWriteItem } from '@aws-sdk/client-dynamodb'
 import { v4 } from 'uuid'
 import { OutboxItem, OutboxItemStatus } from './outbox.item'
-import { isClass } from '../../util/is-class'
 import { Store } from '../store'
-import { Event } from '../event/event'
 
 export class OutboxStore {
     readonly OUTBOX_STORE_NAME = process.env.OUTBOX_STORE_NAME as string
@@ -14,12 +12,17 @@ export class OutboxStore {
         this.store = new Store(tableName ?? this.OUTBOX_STORE_NAME)
     }
 
-    publish(event: Event): TransactWriteItem {
-        if (!isClass(event)) throw new Error('event must be a valid class')
-
+    publish(type: string, data: any): TransactWriteItem {
         const id = v4()
 
-        const item = new OutboxItem(id, OutboxItemStatus.PENDING, event)
+        const item: OutboxItem = {
+            pk: id,
+            id,
+            status: OutboxItemStatus.PENDING,
+            type,
+            data,
+            timestamp: new Date().toISOString(),
+        }
 
         return this.store.save(item)
     }

@@ -1,16 +1,8 @@
 import { AggregateItem } from '../../src/store/aggregate/aggregate.item'
 
-export class Customer extends AggregateItem {
-    constructor(
-        readonly customerId: string,
-        readonly firstName: string,
-        readonly lastName: string,
-        readonly scheduledTaskId: string
-    ) {
-        super(customerId)
-    }
-
-    fromItem(item: any): any {
-        return new Customer(item.customerId, item.firstName, item.lastName, item.scheduledTaskId)
-    }
-}
+export type Customer = {
+    customerId: string
+    firstName: string
+    lastName: string
+    scheduledTaskId: string
+} & AggregateItem

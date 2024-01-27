@@ -1,12 +1,6 @@
-export abstract class StoreItem {
-    timestamp: string
-
-    constructor(
-        readonly pk: string,
-        readonly sk?: string | number
-    ) {
-        this.timestamp = new Date().toISOString()
-    }
-
-    abstract fromItem(item: any): any
+export type StoreItem = {
+    pk: string
+    sk?: string | number
+    timestamp?: string
+    version?: number
 }

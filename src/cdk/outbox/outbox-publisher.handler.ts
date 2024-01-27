@@ -18,9 +18,9 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
     const forwardOutboxItem = (item: OutboxItem) => {
         const message: EventMessage<any> = {
             messageId: item.id,
-            type: item.event.type,
-            data: item.event,
-            timestamp: item.timestamp,
+            type: item.type,
+            data: item.data,
+            timestamp: new Date().toISOString(),
         }
 
         eventsToPut.push({

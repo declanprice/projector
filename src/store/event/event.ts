@@ -1,3 +1,3 @@
-export class Event {
-    readonly type: string = this.constructor.name
+export type Event = {
+    type: string
 }

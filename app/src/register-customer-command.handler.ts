@@ -8,7 +8,6 @@ import { OutboxStore } from '../../src/store/outbox/outbox.store'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
 import { Saga } from '../../src/saga/saga'
 import { commit } from '../../src/store/store-operations'
-import { CustomerRegisteredEvent } from './customer-registered-event.handler'
 
 const RegisterCustomerSchema = object({
     firstName: string(),
@@ -29,9 +28,19 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
     async handle(command: Command<Output<typeof RegisterCustomerSchema>>) {
         const customerId = v4()
         const scheduledTaskId = v4()
-        const customer = new Customer(customerId, command.data.firstName, command.data.lastName, scheduledTaskId)
-        const event = new CustomerRegisteredEvent(customerId)
-        return this.saga.start(customer)
+
+        // const customer: Customer = {
+        //     pk: '1',
+        //     customerId: '1',
+        //     type: 'Customer',
+        //     firstName: command.data.firstName,
+        //     lastName: command.data.lastName,
+        //     scheduledTaskId,
+        // }
+
+        const customer = await this.store.get<Customer>('1')
+        customer.firstName = 'changed'
+        await commit(this.store.save(customer))
         // await commit(this.store.save(customer), this.outbox.publish(event))
     }
 }

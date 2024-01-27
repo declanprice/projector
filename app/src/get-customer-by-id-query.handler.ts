@@ -10,6 +10,6 @@ export class GetCustomerByIdQueryHandler implements HandleQuery {
     readonly store = new Store('Projections')
 
     async handle(query: QueryMessage<any>) {
-        return this.store.get(CustomerProjection, query.params.id)
+        return this.store.get<CustomerProjection>(query.params.id)
     }
 }

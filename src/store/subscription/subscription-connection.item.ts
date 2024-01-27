@@ -1,11 +1,7 @@
 import { StoreItem } from '../store.item'
 
-export class SubscriptionConnectionItem extends StoreItem {
-    constructor(connectionId: string) {
-        super(connectionId, 'Connection')
-    }
+export type SubscriptionConnectionItem = {
+    connectionId: string
+} & StoreItem
 
-    fromItem(item: any): any {
-        return new SubscriptionConnectionItem(item.connectionId)
-    }
-}
+export const subscriptionConnectionSk = () => 'Connection'

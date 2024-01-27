@@ -1,9 +1,8 @@
-- sagas
-- idempotency checks across the board
-- resource naming conventions
-- error handling
-- dead letter queues
+- aggregate version & concurrency protection
+- projection versions & concurrency protection
+- change event handler to individual
+- across the board error handling
+- across the board dead letter queues
 - consistent logging structure
-- configurable monitoring alarms, xray
+- configurable monitoring alarms, notifications, xray
 - unit / integration / e2e tests
-

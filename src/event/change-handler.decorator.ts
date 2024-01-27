@@ -37,14 +37,14 @@ export const getChangeHandlerGroupProps = (target: any): ChangeHandlerGroupProps
     return Reflect.getMetadata(CHANGE_HANDLER_GROUP, target)
 }
 
-export const ChangeHandler = (type: Type<AggregateItem>, change: ChangeType): MethodDecorator => {
+export const ChangeHandler = (type: string, change: ChangeType): MethodDecorator => {
     return (target: any, propertyKey: string | symbol) => {
-        Reflect.defineMetadata(`${type.name}-${change}`, propertyKey, target.constructor)
+        Reflect.defineMetadata(`${type}-${change}`, propertyKey, target.constructor)
 
         const changeTypes = getChangeHandlerGroupTypes(target.constructor)
 
         changeTypes.push({
-            type: type.name,
+            type: type,
             change,
         })
 

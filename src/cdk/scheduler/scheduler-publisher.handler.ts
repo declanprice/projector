@@ -9,6 +9,7 @@ import {
 } from '@aws-sdk/client-scheduler'
 import { format } from 'date-fns'
 import { ResourceNotFoundException } from '@aws-sdk/client-scheduler'
+import { ChangeMessage, ChangeType } from '../../event'
 
 const client = new SchedulerClient()
 
@@ -26,6 +27,14 @@ export const schedulerPublisherHandler = async (event: DynamoDBStreamEvent) => {
             console.log(`[INSERT EVENT]`)
             const item = unmarshall(record.dynamodb.NewImage as any) as ScheduledItem
             const scheduledAt = format(item.scheduledAt, `yyyy-MM-dd'T'HH:mm:ss`)
+            const changeEvent: ChangeMessage<any> = {
+                id: item.pk,
+                type: item.type,
+                change: record.eventName as ChangeType,
+                data: item.data,
+                timestamp: item.timestamp,
+                version: item.version,
+            }
             await client.send(
                 new CreateScheduleCommand({
                     Name: item.id,
@@ -38,7 +47,7 @@ export const schedulerPublisherHandler = async (event: DynamoDBStreamEvent) => {
                             DetailType: 'EVENT',
                             Source: 'SCHEDULER',
                         },
-                        Input: JSON.stringify(item.data),
+                        Input: JSON.stringify(changeEvent),
                     },
                     FlexibleTimeWindow: {
                         Mode: FlexibleTimeWindowMode.OFF,
