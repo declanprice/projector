@@ -66,20 +66,21 @@ export class Store {
     }
 
     save<I extends StoreItem>(item: I): TransactWriteItem {
-        if (item.version) item.version++
-        if (!item.version) item.version = 0
+        if (item.version !== undefined) item.version++
+
+        const expectedVersion = (item?.version || 0) - 1
 
         return {
             Put: {
                 TableName: this.tableName,
                 Item: marshall(item, { convertClassInstanceToMap: true, removeUndefinedValues: true }),
-                ConditionExpression: 'attribute_exists(#version) AND #version = :expectedVersion',
+                ConditionExpression: item.version !== undefined ? '#version = :expectedVersion' : undefined,
                 ExpressionAttributeNames: {
                     '#version': 'version',
                 },
                 ExpressionAttributeValues: {
                     ':expectedVersion': {
-                        N: `${item.version - 1}`,
+                        N: `${expectedVersion}`,
                     },
                 },
             },

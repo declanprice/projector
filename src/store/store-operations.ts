@@ -1,4 +1,5 @@
 import {
+    ConditionalCheckFailedException,
     DeleteItemCommand,
     DynamoDBClient,
     PutItemCommand,
@@ -39,6 +40,10 @@ export const commit = async (...writeItems: TransactWriteItem[]) => {
 }
 
 export const isConditionCheckError = (error: any): boolean => {
+    if (error instanceof ConditionalCheckFailedException) {
+        return true
+    }
+
     if (error instanceof TransactionCanceledException) {
         if (error.CancellationReasons) {
             return error.CancellationReasons.some((r) => r.Code === 'ConditionalCheckFailed')
