@@ -5,7 +5,6 @@ import { parse } from 'valibot'
 import { SubscriptionStore } from '../store/subscription/subscription.store'
 import { ApiGatewayManagementApi, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi'
 import { SubscriptionItem } from '../store/subscription/subscription.item'
-import { commit } from '../store/store-operations'
 
 export type HandleSubscription = {
     onSub?: () => Promise<any>
@@ -63,7 +62,7 @@ export const addSubscriptionHandler = async (
         }
     }
 
-    await commit(store.sub(connectionId, `${instance.constructor.name}`, lookupKey, filter))
+    await store.sub(connectionId, `${instance.constructor.name}`, lookupKey, filter).exec()
 
     return {
         statusCode: 200,
@@ -91,7 +90,7 @@ export const removeSubscriptionHandler = async (
         await instance.onUnsub()
     }
 
-    await commit(store.unsub(connectionId, `${instance.constructor.name}`, lookupKey))
+    await store.unsub(connectionId, `${instance.constructor.name}`, lookupKey).exec()
 
     return {
         statusCode: 200,
@@ -113,11 +112,11 @@ export const subscriptionHandler = async (
             continue
         }
 
-        const response = await store.querySubsByLookupKey(instance.constructor.name, lookupKey)
+        const response = await store.querySubsByLookupKey(instance.constructor.name, lookupKey).exec()
 
-        console.log(`[SUBS FOUND] - ${response.data.length} subscriptions found using lookupKey ${lookupKey}`)
+        console.log(`[SUBS FOUND] - ${response.items.length} subscriptions found using lookupKey ${lookupKey}`)
 
-        let subscriptions = response.data as SubscriptionItem<any>[]
+        let subscriptions = response.items as SubscriptionItem[]
 
         if (instance.filter) {
             subscriptions.filter((sub) => {

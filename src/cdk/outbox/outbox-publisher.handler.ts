@@ -20,7 +20,6 @@ export const outboxPublisherHandler = async (event: DynamoDBStreamEvent) => {
             messageId: item.id,
             type: item.type,
             data: item.data,
-            timestamp: new Date().toISOString(),
         }
 
         eventsToPut.push({

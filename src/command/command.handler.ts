@@ -30,7 +30,6 @@ export const commandHandler = async (
 
         const message: Command<any> = {
             invocationType: CommandInvocationType.HTTP,
-            timestamp: new Date().toISOString(),
             data: body,
         }
 
@@ -46,7 +45,6 @@ export const commandHandler = async (
 
         const message: Command<any> = {
             invocationType: CommandInvocationType.SAGA,
-            timestamp: new Date().toISOString(),
             taskToken: event?.taskToken,
             data: input,
         }

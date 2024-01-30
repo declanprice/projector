@@ -24,7 +24,7 @@
     "@aws-sdk/client-sqs": "^3.490.0",
     "@aws-sdk/util-dynamodb": "^3.485.0",
     "@aws/dynamodb-expressions": "^0.7.3",
-    "@declanprice/dynostore": "^0.0.8",
+    "@declanprice/dynostore": "^0.0.11",
     "@types/aws-lambda": "^8.10.131",
     "@types/jest": "^29.5.11",
     "@types/uuid": "^9.0.7",

@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent } from 'aws-lambda'
 import { SubscriptionStore } from '../../store/subscription/subscription.store'
-import { commit } from '../../store/store-operations'
+import { StoreItem } from '../../store/store.item'
+import { transactWriteItems } from '@declanprice/dynostore'
 
 const store = new SubscriptionStore()
 
@@ -16,9 +17,9 @@ export const subscriptionApiDisconnectHandler = async (event: APIGatewayProxyEve
         }
     }
 
-    const result = await store.queryItemsByConnectionId(connectionId)
+    const result = await store.queryItemsByConnectionId<StoreItem>(connectionId).exec()
 
-    await commit(...result.data.map((i) => store.delete(i.pk, i.sk)))
+    await transactWriteItems(...result.items.map((i) => store.delete().key({ pk: i.pk, sk: i.sk! }).tx()))
 
     return { statusCode: 200, body: 'ok' }
 }

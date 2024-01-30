@@ -1,10 +1,10 @@
 import { StoreItem } from '../store.item'
 
-export type SubscriptionItem<Filter> = {
+export type SubscriptionItem = {
     connectionId: string
     type: string
     lookupKey: string
-    filter: Filter
+    filter: any
 } & StoreItem
 
 export const subscriptionItemSk = (type: string, lookupKey: string) => {

@@ -11,7 +11,6 @@ import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { SubscriptionBus } from './subscription-bus'
 import { Type } from '../../util/type'
 import { SubscriptionFilter } from 'aws-cdk-lib/aws-sns'
-import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam'
 
 type SubscriptionHandlerProps = {
     subscriptionApi: SubscriptionApi

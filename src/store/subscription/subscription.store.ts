@@ -1,10 +1,10 @@
-import { Store } from '../store'
+import { eq, Store } from '@declanprice/dynostore'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SubscriptionConnectionItem, subscriptionConnectionSk } from './subscription-connection.item'
 import { SubscriptionItem, subscriptionItemSk } from './subscription.item'
-import { equals } from '@aws/dynamodb-expressions'
 
 export class SubscriptionStore {
-    readonly store = new Store(process.env.SUBSCRIPTION_STORE_NAME as string)
+    readonly store = new Store(process.env.SUBSCRIPTION_STORE_NAME as string, new DynamoDBClient())
 
     connect(connectionId: string) {
         const item: SubscriptionConnectionItem = {
@@ -13,11 +13,11 @@ export class SubscriptionStore {
             connectionId,
         }
 
-        return this.store.save(item)
+        return this.store.put().item(item)
     }
 
     disconnect(connectionId: string) {
-        return this.store.delete(connectionId, subscriptionConnectionSk())
+        return this.store.delete().key({ pk: connectionId, sk: subscriptionConnectionSk() })
     }
 
     sub(connectionId: string, type: string, lookupKey: string, filter: any) {
@@ -30,22 +30,22 @@ export class SubscriptionStore {
             filter,
         }
 
-        return this.store.save(item)
+        return this.store.put().item(item)
     }
 
     unsub(connectionId: string, type: string, lookupKey: string) {
-        return this.store.delete(connectionId, subscriptionItemSk(type, lookupKey))
+        return this.store.delete().key({ pk: connectionId, sk: subscriptionItemSk(type, lookupKey) })
     }
 
-    delete(pk: string, sk?: string | number) {
-        return this.store.delete(pk, sk)
+    delete() {
+        return this.store.delete()
     }
 
-    async querySubsByLookupKey(type: string, lookupKey: string) {
-        return this.store.query().using('lookupKey-index').pk('lookupKey', lookupKey).sk('type', equals(type)).exec()
+    querySubsByLookupKey(type: string, lookupKey: string) {
+        return this.store.query().using('lookupKey-index').pk('lookupKey', lookupKey).sk(eq('type', type))
     }
 
-    async queryItemsByConnectionId(connectionId: string) {
-        return this.store.query().pk('pk', connectionId).exec()
+    queryItemsByConnectionId<Item>(connectionId: string) {
+        return this.store.query<Item>().pk('pk', connectionId)
     }
 }

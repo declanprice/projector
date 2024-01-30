@@ -10,5 +10,4 @@ export type ChangeMessage<Data> = {
     type: string
     data: Data
     version: number
-    timestamp?: string
 }

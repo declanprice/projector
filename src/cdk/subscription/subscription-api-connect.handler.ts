@@ -1,7 +1,6 @@
 import { APIGatewayProxyEvent } from 'aws-lambda'
 
 import { SubscriptionStore } from '../../store/subscription/subscription.store'
-import { commit } from '../../store/store-operations'
 
 const store = new SubscriptionStore()
 
@@ -17,7 +16,7 @@ export const subscriptionApiConnectHandler = async (event: APIGatewayProxyEvent)
         }
     }
 
-    await commit(store.connect(connectionId))
+    await store.connect(connectionId).exec()
 
     return { statusCode: 200, body: 'ok' }
 }

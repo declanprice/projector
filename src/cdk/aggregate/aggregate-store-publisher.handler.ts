@@ -38,7 +38,6 @@ export const aggregateStorePublisherHandler = async (event: DynamoDBStreamEvent)
             type: data.type,
             change: record.eventName as ChangeType,
             data: data,
-            timestamp: data.timestamp,
             version: data.version,
         }
 

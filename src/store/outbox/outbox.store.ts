@@ -20,7 +20,6 @@ export class OutboxStore {
             status: OutboxItemStatus.PENDING,
             type: event.type,
             data: event,
-            timestamp: new Date().toISOString(),
         }
 
         return this.store.put().item(item)
