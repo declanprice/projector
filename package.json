@@ -1,8 +1,8 @@
 {
   "name": "projector",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
-  "main": "dist",
+  "main": "./dist",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",

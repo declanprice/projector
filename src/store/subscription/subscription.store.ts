@@ -21,7 +21,7 @@ export class SubscriptionStore {
     }
 
     sub(connectionId: string, type: string, lookupKey: string, filter: any) {
-        const item: SubscriptionItem<any> = {
+        const item: SubscriptionItem = {
             pk: connectionId,
             sk: subscriptionItemSk(type, lookupKey),
             type,

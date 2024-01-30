@@ -1,9 +1,9 @@
+import { eq, increment, notExists, set } from '@declanprice/dynostore'
 import { Customer } from './customer.aggregate'
 import { CustomerProjection } from './customer.projection'
 import { ChangeMessage, ChangeHandler, ChangeHandlerGroup, ChangeType } from '../../src/event'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
 import { ProjectionStore } from '../../src/store/projection/projection.store'
-import { eq, increment, notExists, set } from '@declanprice/dynostore'
 
 @ChangeHandlerGroup({
     batchSize: 10,
@@ -13,7 +13,7 @@ export class CustomerProjectionChangeHandler {
     readonly subscriptionBus = new SubscriptionBus('SubscriptionBus')
 
     @ChangeHandler('Customer', ChangeType.INSERT)
-    async onCreate(change: ChangeMessage<Customer>) {
+    async onInsert(change: ChangeMessage<Customer>) {
         return this.store
             .put<CustomerProjection>()
             .item({
