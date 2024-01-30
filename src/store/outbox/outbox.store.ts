@@ -1,18 +1,17 @@
-import { TransactWriteItem } from '@aws-sdk/client-dynamodb'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { PutItemBuilder, Store } from '@declanprice/dynostore'
 import { v4 } from 'uuid'
 import { OutboxItem, OutboxItemStatus } from './outbox.item'
-import { Store } from '../store'
+import { Event } from '../event/event'
 
 export class OutboxStore {
-    readonly OUTBOX_STORE_NAME = process.env.OUTBOX_STORE_NAME as string
-
     readonly store: Store
 
-    constructor(readonly tableName?: string) {
-        this.store = new Store(tableName ?? this.OUTBOX_STORE_NAME)
+    constructor(readonly tableName: string) {
+        this.store = new Store(tableName, new DynamoDBClient())
     }
 
-    publish(event: Event): TransactWriteItem {
+    publish(event: Event): PutItemBuilder<any> {
         const id = v4()
 
         const item: OutboxItem = {
@@ -24,6 +23,6 @@ export class OutboxStore {
             timestamp: new Date().toISOString(),
         }
 
-        return this.store.save(item)
+        return this.store.put().item(item)
     }
 }

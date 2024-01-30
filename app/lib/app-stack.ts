@@ -17,6 +17,7 @@ import {
     QueryHandler,
     ProjectionStore,
     ChangeHandler,
+    EventHandler,
 } from '../../src/cdk'
 import { RegisterCustomerCommandHandler } from '../src/register-customer-command.handler'
 import { CustomerSubscriptionHandler } from '../src/customer-subscription.handler'
@@ -27,6 +28,7 @@ import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id-query.han
 import { CustomerProjectionChangeHandler } from '../src/customer-projection-change.handler'
 import { SagaDefinition } from '../../src/cdk/saga/saga-definition'
 import { ChangeCustomerNameCommandHandler } from '../src/change-customer-name-command.handler'
+import { CustomerRegisteredEventHandler } from '../src/customer-registered-event.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -87,6 +89,11 @@ export class AppStack extends cdk.Stack {
             eventBus,
             projectionStores: [projectionStore],
             entry: 'src/customer-projection-change.handler.ts',
+        })
+
+        new EventHandler(this, CustomerRegisteredEventHandler, {
+            eventBus,
+            entry: 'src/customer-registered-event.handler.ts',
         })
     }
 

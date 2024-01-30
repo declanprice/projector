@@ -7,6 +7,7 @@ import { OutboxStore } from '../../src/store/outbox/outbox.store'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
 import { Saga } from '../../src/saga/saga'
 import { AggregateStore } from '../../src/store/aggregate/aggregate.store'
+import { CustomerRegisteredEvent } from './customer-registered-event.handler'
 import { transactWriteItems } from '@declanprice/dynostore'
 
 const RegisterCustomerSchema = object({
@@ -39,6 +40,11 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
             version: 0,
         }
 
-        await this.store.put().item(customer).exec()
+        const event: CustomerRegisteredEvent = {
+            type: 'CustomerRegisteredEvent',
+            customerId,
+        }
+
+        await transactWriteItems(this.store.put().item(customer).tx(), this.outbox.publish(event).tx())
     }
 }

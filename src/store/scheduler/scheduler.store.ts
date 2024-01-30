@@ -1,5 +1,5 @@
-import { TransactWriteItem } from '@aws-sdk/client-dynamodb'
-import { Store } from '../store'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { DeleteItemBuilder, PutItemBuilder, Store } from '@declanprice/dynostore'
 import { ScheduledItem } from './scheduled.item'
 
 export class SchedulerStore {
@@ -7,11 +7,11 @@ export class SchedulerStore {
 
     readonly store: Store
 
-    constructor(readonly tableName?: string) {
-        this.store = new Store(tableName ?? this.SCHEDULER_STORE_NAME)
+    constructor(readonly tableName: string) {
+        this.store = new Store(tableName, new DynamoDBClient())
     }
 
-    schedule(id: string, type: string, data: any, scheduledAt: Date | string): TransactWriteItem {
+    schedule(id: string, type: string, data: any, scheduledAt: Date | string): PutItemBuilder<any> {
         const item: ScheduledItem = {
             pk: id,
             id,
@@ -21,10 +21,10 @@ export class SchedulerStore {
             data,
         }
 
-        return this.store.save(item)
+        return this.store.put().item(item)
     }
 
-    delete(id: string): TransactWriteItem {
-        return this.store.delete(id)
+    unschedule(id: string): DeleteItemBuilder<any> {
+        return this.store.delete().key({ pk: id })
     }
 }
