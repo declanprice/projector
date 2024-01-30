@@ -1,7 +1,7 @@
 {
   "name": "@declanprice/projector",
   "version": "0.0.1",
-  "description": "",
+  "description": "AWS Serverless CQRS Toolkit",
   "main": "./dist",
   "scripts": {
     "build": "tsc",
@@ -13,7 +13,6 @@
     "type": "git",
     "url": "https://github.com/declanprice/projector.git"
   },
-  "private": true,
   "dependencies": {
     "@aws-sdk/client-apigatewaymanagementapi": "^3.499.0",
     "@aws-sdk/client-dynamodb": "^3.485.0",
