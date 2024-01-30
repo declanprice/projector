@@ -8,6 +8,7 @@ import { OutboxStore } from '../../src/store/outbox/outbox.store'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
 import { Saga } from '../../src/saga/saga'
 import { commit } from '../../src/store/store-operations'
+import { AggregateStore } from '../../src/store/aggregate/aggregate.store'
 
 const RegisterCustomerSchema = object({
     firstName: string(),
@@ -19,7 +20,7 @@ const RegisterCustomerSchema = object({
     schema: RegisterCustomerSchema,
 })
 export class RegisterCustomerCommandHandler implements HandleCommand {
-    readonly store = new Store('Aggregates')
+    readonly store = new AggregateStore('Aggregates')
     readonly scheduler = new SchedulerStore('Scheduler')
     readonly outbox = new OutboxStore('Outbox')
     readonly subscriptionBus = new SubscriptionBus('SubscriptionBus')
@@ -36,6 +37,7 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
         //     firstName: command.data.firstName,
         //     lastName: command.data.lastName,
         //     scheduledTaskId,
+        //     version: 0,
         // }
 
         const customer = await this.store.get<Customer>('1')

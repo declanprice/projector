@@ -54,7 +54,6 @@ export class Store {
 
     create<I extends StoreItem>(item: I): TransactWriteItem {
         item.timestamp = new Date().toISOString()
-        item.version = 0
 
         return {
             Put: {
@@ -66,23 +65,12 @@ export class Store {
     }
 
     save<I extends StoreItem>(item: I): TransactWriteItem {
-        if (item.version !== undefined) item.version++
-
-        const expectedVersion = (item?.version || 0) - 1
+        item.timestamp = new Date().toISOString()
 
         return {
             Put: {
                 TableName: this.tableName,
                 Item: marshall(item, { convertClassInstanceToMap: true, removeUndefinedValues: true }),
-                ConditionExpression: item.version !== undefined ? '#version = :expectedVersion' : undefined,
-                ExpressionAttributeNames: {
-                    '#version': 'version',
-                },
-                ExpressionAttributeValues: {
-                    ':expectedVersion': {
-                        N: `${expectedVersion}`,
-                    },
-                },
             },
         }
     }

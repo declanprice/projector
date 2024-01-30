@@ -1,7 +1,7 @@
-import { StoreItem } from '../../src/store/store.item'
+import { ProjectionItem } from '../../src/store/projection/projection.item'
 
 export type CustomerProjection = {
-    readonly customerId: string
-    readonly firstName: string
-    readonly lastName: string
-} & StoreItem
+    customerId: string
+    firstName: string
+    lastName: string
+} & ProjectionItem
