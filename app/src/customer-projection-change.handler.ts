@@ -1,9 +1,9 @@
 import { Customer } from './customer.aggregate'
 import { CustomerProjection } from './customer.projection'
 import { ChangeMessage, ChangeHandler, ChangeHandlerGroup, ChangeType } from '../../src/event'
-import { commit } from '../../src/store/store-operations'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
 import { ProjectionStore } from '../../src/store/projection/projection.store'
+import { eq, increment, notExists, set } from '@declanprice/dynostore'
 
 @ChangeHandlerGroup({
     batchSize: 10,
@@ -14,33 +14,56 @@ export class CustomerProjectionChangeHandler {
 
     @ChangeHandler('Customer', ChangeType.INSERT)
     async onCreate(change: ChangeMessage<Customer>) {
-        const projection: CustomerProjection = {
-            pk: change.data.customerId,
-            customerId: change.data.customerId,
-            firstName: change.data.firstName,
-            lastName: change.data.lastName,
-            version: change.data.version,
-        }
-
-        await commit(this.store.create(projection))
+        return this.store
+            .put<CustomerProjection>()
+            .item({
+                pk: change.data.customerId,
+                customerId: change.data.customerId,
+                firstName: change.data.firstName,
+                lastName: change.data.lastName,
+                version: change.data.version,
+            })
+            .condition(notExists('pk'))
+            .exec()
     }
 
     @ChangeHandler('Customer', ChangeType.MODIFY)
     async onUpdate(change: ChangeMessage<Customer>) {
-        const projection = await this.store.get<CustomerProjection>(change.data.customerId)
-        projection.firstName = change.data.firstName
-        projection.lastName = change.data.lastName
+        const projection = await this.store.get<CustomerProjection>().key({ pk: change.data.customerId }).exec()
 
-        if (projection.version > change.version) {
-            console.log('[SKIPPING UPDATE] - current version is greater than incoming version.')
+        if (!projection) {
+            return this.store
+                .put<CustomerProjection>()
+                .item({
+                    pk: change.data.customerId,
+                    customerId: change.data.customerId,
+                    firstName: change.data.firstName,
+                    lastName: change.data.lastName,
+                    version: change.data.version,
+                })
+                .condition(notExists('pk'))
+                .exec()
+        }
+
+        if (projection.version >= change.version) {
+            console.log('[skipping update] - current version is greater than or equal to incoming version.')
             return
         }
 
-        await commit(this.store.save(projection))
+        return this.store
+            .update()
+            .key({ pk: change.data.customerId })
+            .update(
+                set('firstName', change.data.firstName),
+                set('lastName', change.data.lastName),
+                increment('version', 1)
+            )
+            .condition(eq('version', projection.version))
+            .exec()
     }
 
     @ChangeHandler('Customer', ChangeType.REMOVE)
     async onDelete(change: ChangeMessage<Customer>) {
-        await commit(this.store.delete(change.data.customerId))
+        return this.store.delete().key({ pk: change.data.customerId }).exec()
     }
 }

@@ -26,6 +26,7 @@ import { ErrorStepOneHandler, ErrorStepTwoHandler } from '../src/saga/error-step
 import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id-query.handler'
 import { CustomerProjectionChangeHandler } from '../src/customer-projection-change.handler'
 import { SagaDefinition } from '../../src/cdk/saga/saga-definition'
+import { ChangeCustomerNameCommandHandler } from '../src/change-customer-name-command.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -66,19 +67,30 @@ export class AppStack extends cdk.Stack {
         const registerCustomer = new CommandHandler(this, RegisterCustomerCommandHandler, {
             handlerApi,
             aggregateStore,
-            schedulerStore,
             outboxStore,
-            subscriptionBus,
             entry: 'src/register-customer-command.handler.ts',
         })
 
-        new SubscriptionHandler(this, CustomerSubscriptionHandler, {
-            subscriptionStore,
-            subscriptionApi,
-            subscriptionBus,
-            entry: 'src/customer-subscription.handler.ts',
+        const changeCustomerName = new CommandHandler(this, ChangeCustomerNameCommandHandler, {
+            handlerApi,
+            aggregateStore,
+            entry: 'src/change-customer-name-command.handler.ts',
         })
 
+        new QueryHandler(this, GetCustomerByIdQueryHandler, {
+            handlerApi,
+            projectionStores: [projectionStore],
+            entry: 'src/get-customer-by-id-query.handler.ts',
+        })
+
+        new ChangeHandler(this, CustomerProjectionChangeHandler, {
+            eventBus,
+            projectionStores: [projectionStore],
+            entry: 'src/customer-projection-change.handler.ts',
+        })
+    }
+
+    createSaga = (registerCustomer: CommandHandler) => {
         const stepOne = new CommandHandler(this, StepOneHandler, {
             entry: 'src/saga/success-steps.ts',
         })
@@ -118,18 +130,6 @@ export class AppStack extends cdk.Stack {
         new Saga(this, 'SagaHandler', {
             startBy: registerCustomer,
             definitionBody: sagaDefinition.create(),
-        })
-
-        new QueryHandler(this, GetCustomerByIdQueryHandler, {
-            handlerApi,
-            projectionStores: [projectionStore],
-            entry: 'src/get-customer-by-id-query.handler.ts',
-        })
-
-        new ChangeHandler(this, CustomerProjectionChangeHandler, {
-            eventBus,
-            projectionStores: [projectionStore],
-            entry: 'src/customer-projection-change.handler.ts',
         })
     }
 }
