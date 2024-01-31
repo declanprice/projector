@@ -1,10 +1,8 @@
 import { SQSEvent } from 'aws-lambda'
-import { Type } from '../util/type'
 import { symbol } from 'valibot'
 import 'reflect-metadata'
 import { ChangeType } from './change-event.type'
 import { changeHandler } from './change.handler'
-import { AggregateItem } from '../store/aggregate/aggregate.item'
 
 const CHANGE_HANDLER_GROUP = symbol('CHANGE_HANDLER_GROUP')
 
@@ -37,18 +35,28 @@ export const getChangeHandlerGroupProps = (target: any): ChangeHandlerGroupProps
     return Reflect.getMetadata(CHANGE_HANDLER_GROUP, target)
 }
 
-export const ChangeHandler = (type: string, change: ChangeType): MethodDecorator => {
+export const ChangeHandler = (type: string, changeTypes: ChangeType | ChangeType[]): MethodDecorator => {
     return (target: any, propertyKey: string | symbol) => {
-        Reflect.defineMetadata(`${type}-${change}`, propertyKey, target.constructor)
+        const currentChangeTypes = getChangeHandlerGroupTypes(target.constructor)
 
-        const changeTypes = getChangeHandlerGroupTypes(target.constructor)
+        const registerType = (type: string, changeType: ChangeType) => {
+            Reflect.defineMetadata(`${type}-${changeType}`, propertyKey, target.constructor)
 
-        changeTypes.push({
-            type: type,
-            change,
-        })
+            currentChangeTypes.push({
+                type: type,
+                change: changeType,
+            })
+        }
 
-        Reflect.defineMetadata(CHANGE_HANDLER_GROUP_TYPES, changeTypes, target.constructor)
+        if (Array.isArray(changeTypes)) {
+            for (const changeType of changeTypes) {
+                registerType(type, changeType)
+            }
+        } else {
+            registerType(type, changeTypes)
+        }
+
+        Reflect.defineMetadata(CHANGE_HANDLER_GROUP_TYPES, currentChangeTypes, target.constructor)
     }
 }
 

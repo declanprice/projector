@@ -7,4 +7,5 @@ export type Command<Data = {}> = {
     invocationType: CommandInvocationType
     taskToken?: string
     data: Data
+    params: any
 }

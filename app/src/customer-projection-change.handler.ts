@@ -12,23 +12,8 @@ export class CustomerProjectionChangeHandler {
     readonly store = new ProjectionStore('Projections')
     readonly subscriptionBus = new SubscriptionBus('SubscriptionBus')
 
-    @ChangeHandler('Customer', ChangeType.INSERT)
-    async onInsert(change: ChangeMessage<Customer>) {
-        return this.store
-            .put<CustomerProjection>()
-            .item({
-                pk: change.data.customerId,
-                customerId: change.data.customerId,
-                firstName: change.data.firstName,
-                lastName: change.data.lastName,
-                version: change.data.version,
-            })
-            .condition(notExists('pk'))
-            .exec()
-    }
-
-    @ChangeHandler('Customer', ChangeType.MODIFY)
-    async onUpdate(change: ChangeMessage<Customer>) {
+    @ChangeHandler('Customer', [ChangeType.INSERT, ChangeType.MODIFY])
+    async onChange(change: ChangeMessage<Customer>) {
         const projection = await this.store.get<CustomerProjection>().key({ pk: change.data.customerId }).exec()
 
         if (!projection) {

@@ -31,6 +31,7 @@ export const commandHandler = async (
         const message: Command<any> = {
             invocationType: CommandInvocationType.HTTP,
             data: body,
+            params: event?.pathParameters || {},
         }
 
         return classInstance.handle(message)
@@ -47,6 +48,7 @@ export const commandHandler = async (
             invocationType: CommandInvocationType.SAGA,
             taskToken: event?.taskToken,
             data: input,
+            params: {},
         }
 
         return classInstance.handle(message)
