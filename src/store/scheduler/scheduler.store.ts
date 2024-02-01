@@ -3,8 +3,6 @@ import { DeleteItemBuilder, PutItemBuilder, Store } from '@declanprice/dynostore
 import { ScheduledItem } from './scheduled.item'
 
 export class SchedulerStore {
-    private readonly SCHEDULER_STORE_NAME = process.env.SCHEDULER_STORE_NAME as string
-
     private readonly store: Store
 
     constructor(private readonly tableName: string) {
