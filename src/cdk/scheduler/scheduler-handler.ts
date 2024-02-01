@@ -25,7 +25,7 @@ export class SchedulerHandler extends NodejsFunction {
         super(scope, handler.name, {
             functionName: handler.name,
             runtime: Runtime.NODEJS_20_X,
-            handler: `index.${handler.name}.prototype.scheduledTaskHandler`,
+            handler: `index.${handler.name}.prototype.schedulerHandler`,
             timeout: Duration.seconds(10),
             memorySize: 512,
             bundling: {
