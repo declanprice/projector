@@ -1,13 +1,4 @@
 import { HandleSubscription, SubscriptionHandler } from '../../src/subscription'
-import { object, optional, Output, string } from 'valibot'
-
-const CustomerSubscriptionFilterSchema = object({
-    customerId: string(),
-    firstName: optional(string()),
-    lastName: optional(string()),
-})
-
-type CustomerSubscriptionFilter = Output<typeof CustomerSubscriptionFilterSchema>
 
 type CustomerUpdate = {
     customerId: string
@@ -18,10 +9,9 @@ type CustomerUpdate = {
 @SubscriptionHandler({
     route: 'customer.updates',
     lookupKey: 'customerId',
-    filterSchema: CustomerSubscriptionFilterSchema,
 })
 export class CustomerSubscriptionHandler implements HandleSubscription {
-    filter(update: CustomerUpdate, filter: CustomerSubscriptionFilter) {
+    filter(update: CustomerUpdate, filter: CustomerUpdate) {
         return true
     }
 

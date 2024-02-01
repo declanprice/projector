@@ -3,9 +3,11 @@ import { QueryHandlerDecoratorProps } from './query-handler.decorator'
 import { isHttpEvent } from '../util/is-http-event'
 import { parse } from 'valibot'
 import { QueryMessage } from './query-message'
+import { CommandMessage } from '../command'
 
 export type HandleQuery = {
-    handle: (params: any, query?: any) => Promise<any>
+    validate?: (message: QueryMessage<any>) => Promise<any>
+    handle: (message: QueryMessage<any>) => Promise<any>
 }
 
 export const queryHandler = async (
@@ -18,20 +20,13 @@ export const queryHandler = async (
 
         let query = isGet ? event.queryStringParameters : JSON.parse(event?.body || '{}')
 
-        if (props.schema) {
-            try {
-                query = parse(props.schema, query)
-            } catch (error: any) {
-                return {
-                    statusCode: 400,
-                    body: `${isGet ? 'query params' : 'body'} failed schema validation.`,
-                }
-            }
-        }
-
         const message: QueryMessage<any> = {
             params: event.pathParameters,
             query,
+        }
+
+        if (classInstance.validate) {
+            await classInstance.validate(message)
         }
 
         return classInstance.handle(message)

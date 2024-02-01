@@ -4,4 +4,5 @@ export type CustomerProjection = {
     customerId: string
     firstName: string
     lastName: string
+    version: number
 } & ProjectionItem

@@ -9,7 +9,6 @@ const COMMAND_HANDLER_METADATA = symbol('COMMAND_HANDLER_METADATA')
 export type CommandHandlerProps = {
     path?: string
     method?: 'POST' | 'PUT'
-    schema?: ObjectSchema<any>
 }
 
 export const CommandHandler = (props: CommandHandlerProps = {}): ClassDecorator => {

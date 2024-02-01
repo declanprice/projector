@@ -10,7 +10,7 @@ export class ProjectionStore extends Table {
             tableName: id,
             partitionKey: {
                 type: AttributeType.STRING,
-                name: 'pk',
+                name: 'id',
             },
             removalPolicy: RemovalPolicy.DESTROY,
             ...props,

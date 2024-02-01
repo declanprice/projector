@@ -8,7 +8,6 @@ const QUERY_HANDLER_METADATA = symbol('QUERY_HANDLER_METADATA')
 export type QueryHandlerDecoratorProps = {
     path: string
     method?: 'GET' | 'POST'
-    schema?: ObjectSchema<any>
 }
 
 export const QueryHandler = (props: QueryHandlerDecoratorProps): ClassDecorator => {

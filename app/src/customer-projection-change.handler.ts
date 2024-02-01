@@ -20,7 +20,7 @@ export class CustomerProjectionChangeHandler {
             return this.store
                 .put<CustomerProjection>()
                 .item({
-                    pk: change.data.customerId,
+                    id: change.data.customerId,
                     customerId: change.data.customerId,
                     firstName: change.data.firstName,
                     lastName: change.data.lastName,

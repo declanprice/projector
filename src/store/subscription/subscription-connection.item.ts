@@ -1,7 +1,7 @@
-import { StoreItem } from '../store.item'
-
 export type SubscriptionConnectionItem = {
+    pk: string
+    sk: string
     connectionId: string
-} & StoreItem
+}
 
 export const subscriptionConnectionSk = () => 'Connection'

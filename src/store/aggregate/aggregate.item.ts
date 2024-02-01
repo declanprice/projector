@@ -1,6 +1,5 @@
-import { StoreItem } from '../store.item'
-
 export type AggregateItem = {
+    id: string
     type: string
     version: number
-} & StoreItem
+}

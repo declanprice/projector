@@ -1,12 +1,13 @@
 import { APIGatewayProxyEventV2 } from 'aws-lambda'
 import { isHttpEvent } from '../util/is-http-event'
-import { Command, CommandInvocationType } from './command.type'
+import { CommandMessage, CommandInvocationType } from './command.type'
 import { isSfnEvent, SfnEvent } from '../util/sfn-utils'
 import { CommandHandlerProps } from './command-handler.decorator'
 import { parse } from 'valibot'
 
 export type HandleCommand = {
-    handle: (command?: any) => Promise<any>
+    validate?: (command: CommandMessage<any>) => Promise<any>
+    handle: (command: CommandMessage<any>) => Promise<any>
 }
 
 export const commandHandler = async (
@@ -17,21 +18,14 @@ export const commandHandler = async (
     if (isHttpEvent(event)) {
         let body = JSON.parse(event?.body || '{}')
 
-        if (props.schema) {
-            try {
-                body = parse(props.schema, body)
-            } catch (error: any) {
-                return {
-                    statusCode: 400,
-                    body: 'body failed schema validation.',
-                }
-            }
-        }
-
-        const message: Command<any> = {
+        const message: CommandMessage<any> = {
             invocationType: CommandInvocationType.HTTP,
             data: body,
             params: event?.pathParameters || {},
+        }
+
+        if (classInstance.validate) {
+            await classInstance.validate(message)
         }
 
         return classInstance.handle(message)
@@ -40,11 +34,7 @@ export const commandHandler = async (
     if (isSfnEvent(event)) {
         let input = event?.input || {}
 
-        if (props.schema) {
-            input = parse(props.schema, input)
-        }
-
-        const message: Command<any> = {
+        const message: CommandMessage<any> = {
             invocationType: CommandInvocationType.SAGA,
             taskToken: event?.taskToken,
             data: input,

@@ -29,18 +29,7 @@ export const addSubscriptionHandler = async (
     const connectionId = event.requestContext.connectionId!
     const claims = event.requestContext.authorizer?.claims || {}
     const body = JSON.parse(event?.body || '')
-    let filter = body?.filter || {}
-
-    if (props.filterSchema) {
-        try {
-            filter = parse(props.filterSchema, filter)
-        } catch (error) {
-            return {
-                statusCode: 400,
-                body: 'filter failed schema validation.',
-            }
-        }
-    }
+    const filter = body?.filter || {}
 
     try {
         if (instance.onSub) {

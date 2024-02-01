@@ -34,7 +34,7 @@ export const aggregateStorePublisherHandler = async (event: DynamoDBStreamEvent)
         const data = unmarshall(image as any) as AggregateItem
 
         const changeEvent: ChangeMessage<any> = {
-            id: data.pk,
+            id: data.id,
             type: data.type,
             change: record.eventName as ChangeType,
             data: data,

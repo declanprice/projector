@@ -10,7 +10,11 @@ export class AggregateStore extends Table {
             tableName: id,
             partitionKey: {
                 type: AttributeType.STRING,
-                name: 'pk',
+                name: 'id',
+            },
+            sortKey: {
+                type: AttributeType.STRING,
+                name: 'type',
             },
             stream: StreamViewType.NEW_AND_OLD_IMAGES,
             removalPolicy: RemovalPolicy.DESTROY,

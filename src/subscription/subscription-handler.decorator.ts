@@ -12,7 +12,6 @@ const SUBSCRIPTION_HANDLER_METADATA = symbol('SUBSCRIPTION_HANDLER_METADATA')
 export type SubscriptionHandlerProps = {
     lookupKey: string
     route: string
-    filterSchema?: ObjectSchema<any>
 }
 
 export const SubscriptionHandler = (props: SubscriptionHandlerProps): ClassDecorator => {

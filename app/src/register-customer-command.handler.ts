@@ -1,9 +1,9 @@
-import { object, Output, string } from 'valibot'
+import { object, Output, parse, string } from 'valibot'
 import { v4 } from 'uuid'
 import { transactWriteItems } from '@declanprice/dynostore'
 import { addMinutes } from 'date-fns'
 import { Customer } from './customer.aggregate'
-import { Command, CommandHandler, HandleCommand } from '../../src/command'
+import { CommandMessage, CommandHandler, HandleCommand } from '../../src/command'
 import { SchedulerStore } from '../../src/store/scheduler/scheduler.store'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
 import { Saga } from '../../src/saga/saga'
@@ -14,9 +14,10 @@ const RegisterCustomerSchema = object({
     lastName: string(),
 })
 
+type RegisterCustomerCommand = CommandMessage<Output<typeof RegisterCustomerSchema>>
+
 @CommandHandler({
     path: '/customers',
-    schema: RegisterCustomerSchema,
 })
 export class RegisterCustomerCommandHandler implements HandleCommand {
     readonly store = new AggregateStore('Aggregates')
@@ -24,13 +25,17 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
     readonly subscriptionBus = new SubscriptionBus('SubscriptionBus')
     readonly saga = new Saga('SagaHandler')
 
-    async handle(command: Command<Output<typeof RegisterCustomerSchema>>) {
+    async validate(command: RegisterCustomerCommand) {
+        parse(RegisterCustomerSchema, command.data)
+    }
+
+    async handle(command: RegisterCustomerCommand) {
         const customerId = '1'
         const scheduledTaskId = v4()
 
         const customer: Customer = {
+            id: customerId,
             type: 'Customer',
-            pk: customerId,
             customerId: customerId,
             firstName: command.data.firstName,
             lastName: command.data.lastName,

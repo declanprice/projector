@@ -3,7 +3,7 @@ export enum CommandInvocationType {
     SAGA = 'SAGA',
 }
 
-export type Command<Data = {}> = {
+export type CommandMessage<Data = {}> = {
     invocationType: CommandInvocationType
     taskToken?: string
     data: Data
