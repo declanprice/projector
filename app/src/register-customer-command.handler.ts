@@ -40,7 +40,7 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
 
         await transactWriteItems(
             this.store.put().item(customer).tx(),
-            this.scheduler.schedule(customerId, 'test-schedule', customer, addMinutes(new Date(), 10)).tx()
+            this.scheduler.schedule(customerId, 'test-schedule', customer, addMinutes(new Date(), 1)).tx()
         )
     }
 }

@@ -15,6 +15,7 @@ import {
     ProjectionStore,
     ChangeHandler,
     SchedulerHandler,
+    SubscriptionHandler,
 } from '../../src/cdk'
 import { RegisterCustomerCommandHandler } from '../src/register-customer-command.handler'
 import { Saga } from '../../src/cdk/saga/saga'
@@ -24,6 +25,7 @@ import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id-query.han
 import { CustomerProjectionChangeHandler } from '../src/customer-projection-change.handler'
 import { SagaDefinition } from '../../src/cdk/saga/saga-definition'
 import { TestSchedulerHandler } from '../src/test-scheduler.handler'
+import { CustomerSubscriptionHandler } from '../src/customer-subscription.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -76,6 +78,13 @@ export class AppStack extends cdk.Stack {
         new SchedulerHandler(this, TestSchedulerHandler, {
             changeBus,
             entry: 'src/test-scheduler.handler.ts',
+        })
+
+        new SubscriptionHandler(this, CustomerSubscriptionHandler, {
+            subscriptionStore,
+            subscriptionApi,
+            subscriptionBus,
+            entry: 'src/customer-subscription.handler.ts',
         })
     }
 
