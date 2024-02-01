@@ -60,6 +60,7 @@ export class AppStack extends cdk.Stack {
         new CommandHandler(this, RegisterCustomerCommandHandler, {
             handlerApi,
             aggregateStore,
+            schedulerStore,
             entry: 'src/register-customer-command.handler.ts',
         })
 
