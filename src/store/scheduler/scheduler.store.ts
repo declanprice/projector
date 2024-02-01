@@ -13,7 +13,6 @@ export class SchedulerStore {
 
     schedule(id: string, type: string, data: any, scheduledAt: Date | string): PutItemBuilder<any> {
         const item: ScheduledItem = {
-            pk: id,
             id,
             type,
             scheduledAt: new Date(scheduledAt).toISOString(),
