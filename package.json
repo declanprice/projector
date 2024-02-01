@@ -1,6 +1,6 @@
 {
   "name": "@declanprice/projector",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "AWS Serverless CQRS Toolkit",
   "main": "./dist",
   "scripts": {

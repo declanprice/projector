@@ -16,7 +16,7 @@ export const SchedulerHandler = (type: string, props: SchedulerHandlerProps): Cl
         Reflect.defineMetadata(SCHEDULED_TASK_HANDLER_TYPE, type, constructor)
         Reflect.defineMetadata(SCHEDULED_TASK_HANDLER_PROPS, props, constructor)
 
-        constructor.prototype.eventHandler = (event: SQSEvent) => {
+        constructor.prototype.schedulerHandler = (event: SQSEvent) => {
             console.log(`[SCHEDULED TASK HANDLER] - ${JSON.stringify(event, null, 2)}`)
             return schedulerHandler(new constructor(), props, event)
         }
