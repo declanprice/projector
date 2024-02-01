@@ -1,14 +1,13 @@
 import { object, Output, string } from 'valibot'
 import { v4 } from 'uuid'
+import { transactWriteItems } from '@declanprice/dynostore'
+import { addMinutes } from 'date-fns'
 import { Customer } from './customer.aggregate'
 import { Command, CommandHandler, HandleCommand } from '../../src/command'
 import { SchedulerStore } from '../../src/store/scheduler/scheduler.store'
-import { OutboxStore } from '../../src/store/outbox/outbox.store'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
 import { Saga } from '../../src/saga/saga'
 import { AggregateStore } from '../../src/store/aggregate/aggregate.store'
-import { CustomerRegisteredEvent } from './customer-registered-event.handler'
-import { transactWriteItems } from '@declanprice/dynostore'
 
 const RegisterCustomerSchema = object({
     firstName: string(),
@@ -22,7 +21,6 @@ const RegisterCustomerSchema = object({
 export class RegisterCustomerCommandHandler implements HandleCommand {
     readonly store = new AggregateStore('Aggregates')
     readonly scheduler = new SchedulerStore('Scheduler')
-    readonly outbox = new OutboxStore('Outbox')
     readonly subscriptionBus = new SubscriptionBus('SubscriptionBus')
     readonly saga = new Saga('SagaHandler')
 
@@ -40,11 +38,9 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
             version: 0,
         }
 
-        const event: CustomerRegisteredEvent = {
-            type: 'CustomerRegisteredEvent',
-            customerId,
-        }
-
-        await transactWriteItems(this.store.put().item(customer).tx(), this.outbox.publish(event).tx())
+        await transactWriteItems(
+            this.store.put().item(customer).tx(),
+            this.scheduler.schedule(customerId, 'test-schedule', customer, addMinutes(new Date(), 10)).tx()
+        )
     }
 }

@@ -10,7 +10,7 @@ const client = new EventBridgeClient()
 export const aggregateStorePublisherHandler = async (event: DynamoDBStreamEvent) => {
     console.log(event)
 
-    const EVENT_BUS_NAME = process.env.EVENT_BUS_NAME
+    const CHANGE_BUS_NAME = process.env.CHANGE_BUS_NAME
 
     const changeEventsToPut: PutEventsRequestEntry[] = []
 
@@ -42,7 +42,7 @@ export const aggregateStorePublisherHandler = async (event: DynamoDBStreamEvent)
         }
 
         changeEventsToPut.push({
-            EventBusName: EVENT_BUS_NAME,
+            EventBusName: CHANGE_BUS_NAME,
             DetailType: 'CHANGE_EVENT',
             Source: record.eventSource ?? 'AGGREGATE_STORE',
             Detail: JSON.stringify(changeEvent),

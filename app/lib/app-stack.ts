@@ -1,40 +1,35 @@
 import * as cdk from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import {
-    EventBus,
+    ChangeBus,
     AggregateStorePublisher,
     AggregateStore,
-    OutboxStore,
-    OutboxStorePublisher,
     HandlerApi,
     CommandHandler,
     SchedulerStore,
     SchedulerStorePublisher,
     SubscriptionBus,
-    SubscriptionHandler,
     SubscriptionApi,
     SubscriptionStore,
     QueryHandler,
     ProjectionStore,
     ChangeHandler,
-    EventHandler,
+    SchedulerHandler,
 } from '../../src/cdk'
 import { RegisterCustomerCommandHandler } from '../src/register-customer-command.handler'
-import { CustomerSubscriptionHandler } from '../src/customer-subscription.handler'
 import { Saga } from '../../src/cdk/saga/saga'
 import { StepOneHandler, StepThreeHandler, StepTwoHandler } from '../src/saga/success-steps'
 import { ErrorStepOneHandler, ErrorStepTwoHandler } from '../src/saga/error-steps'
 import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id-query.handler'
 import { CustomerProjectionChangeHandler } from '../src/customer-projection-change.handler'
 import { SagaDefinition } from '../../src/cdk/saga/saga-definition'
-import { ChangeCustomerNameCommandHandler } from '../src/change-customer-name-command.handler'
-import { CustomerRegisteredEventHandler } from '../src/customer-registered-event.handler'
+import { TestSchedulerHandler } from '../src/test-scheduler.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props)
 
-        const eventBus = new EventBus(this, 'EventBus')
+        const changeBus = new ChangeBus(this, 'ChangeBus')
 
         const subscriptionBus = new SubscriptionBus(this, 'SubscriptionBus')
 
@@ -47,36 +42,23 @@ export class AppStack extends cdk.Stack {
 
         const aggregateStore = new AggregateStore(this, 'Aggregates')
         new AggregateStorePublisher(this, 'AggregatesPublisher', {
-            eventBus,
+            changeBus,
             aggregateStore,
         })
 
         const schedulerStore = new SchedulerStore(this, 'Scheduler')
         new SchedulerStorePublisher(this, 'SchedulerPublisher', {
-            eventBus,
+            changeBus,
             schedulerStore,
-        })
-
-        const outboxStore = new OutboxStore(this, 'Outbox')
-        new OutboxStorePublisher(this, 'OutboxPublisher', {
-            eventBus,
-            outboxStore,
         })
 
         const projectionStore = new ProjectionStore(this, 'Projections')
 
         /** Handlers **/
-        const registerCustomer = new CommandHandler(this, RegisterCustomerCommandHandler, {
+        new CommandHandler(this, RegisterCustomerCommandHandler, {
             handlerApi,
             aggregateStore,
-            outboxStore,
             entry: 'src/register-customer-command.handler.ts',
-        })
-
-        const changeCustomerName = new CommandHandler(this, ChangeCustomerNameCommandHandler, {
-            handlerApi,
-            aggregateStore,
-            entry: 'src/change-customer-name-command.handler.ts',
         })
 
         new QueryHandler(this, GetCustomerByIdQueryHandler, {
@@ -86,14 +68,14 @@ export class AppStack extends cdk.Stack {
         })
 
         new ChangeHandler(this, CustomerProjectionChangeHandler, {
-            eventBus,
+            changeBus,
             projectionStores: [projectionStore],
             entry: 'src/customer-projection-change.handler.ts',
         })
 
-        new EventHandler(this, CustomerRegisteredEventHandler, {
-            eventBus,
-            entry: 'src/customer-registered-event.handler.ts',
+        new SchedulerHandler(this, TestSchedulerHandler, {
+            changeBus,
+            entry: 'src/test-scheduler.handler.ts',
         })
     }
 

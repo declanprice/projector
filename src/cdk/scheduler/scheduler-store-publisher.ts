@@ -2,14 +2,14 @@ import { Construct } from 'constructs'
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { SchedulerStore } from './scheduler-store'
 import { Duration, Stack } from 'aws-cdk-lib'
-import { DynamoEventSource, SqsDlq } from 'aws-cdk-lib/aws-lambda-event-sources'
+import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
-import { EventBus } from '../event'
+import { ChangeBus } from '../change'
 import { Effect, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import * as path from 'path'
 
 type SchedulerStorePublisherProps = {
-    eventBus: EventBus
+    changeBus: ChangeBus
     schedulerStore: SchedulerStore
 } & Partial<NodejsFunctionProps>
 
@@ -22,7 +22,7 @@ export class SchedulerStorePublisher extends NodejsFunction {
             entry: path.join(__dirname, './scheduler-publisher.handler.ts'),
             handler: 'schedulerPublisherHandler',
             environment: {
-                EVENT_BUS_ARN: props.eventBus.eventBusArn,
+                CHANGE_BUS_ARN: props.changeBus.eventBusArn,
             },
             initialPolicy: [
                 new PolicyStatement({
@@ -41,7 +41,7 @@ export class SchedulerStorePublisher extends NodejsFunction {
             ...props,
         })
 
-        const { schedulerStore, eventBus } = props
+        const { schedulerStore, changeBus } = props
 
         const schedulerRole = new Role(this, 'SchedulerRole', {
             assumedBy: new ServicePrincipal('scheduler.amazonaws.com'),
@@ -51,7 +51,7 @@ export class SchedulerStorePublisher extends NodejsFunction {
                     statements: [
                         new PolicyStatement({
                             effect: Effect.ALLOW,
-                            resources: [eventBus.eventBusArn],
+                            resources: [changeBus.eventBusArn],
                             actions: ['events:PutEvents'],
                         }),
                     ],
@@ -61,7 +61,7 @@ export class SchedulerStorePublisher extends NodejsFunction {
 
         this.addEnvironment('SCHEDULER_ROLE_ARN', schedulerRole.roleArn)
 
-        eventBus.grantPutEventsTo(this)
+        changeBus.grantPutEventsTo(this)
 
         schedulerStore.grantReadWriteData(this)
 

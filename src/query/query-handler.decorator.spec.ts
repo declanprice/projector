@@ -59,7 +59,7 @@ describe('QueryHandler decorator', () => {
         expect(TestQueryHandler.prototype).toHaveProperty('queryHandler')
     })
 
-    it('api gateway v2 event - should invoke query handler with valid params', async () => {
+    it('api gateway v2 change - should invoke query handler with valid params', async () => {
         expect(await (TestQueryHandler.prototype as any)['queryHandler'](httpEvent)).toEqual('dec')
         expect(mockHandle).toHaveBeenCalledWith(
             { id: '1' },
@@ -70,7 +70,7 @@ describe('QueryHandler decorator', () => {
         )
     })
 
-    it('api gateway v2 event - should invoke query handler with valid query string', async () => {
+    it('api gateway v2 change - should invoke query handler with valid query string', async () => {
         expect(await (TestQueryHandler.prototype as any)['queryHandler'](httpEvent)).toEqual('dec')
         expect(mockHandle).toHaveBeenCalledWith(
             { id: '1' },
@@ -81,7 +81,7 @@ describe('QueryHandler decorator', () => {
         )
     })
 
-    it('api gateway v2 event - should invoke query handler with valid body', async () => {
+    it('api gateway v2 change - should invoke query handler with valid body', async () => {
         expect(await (TestQueryBodyHandler.prototype as any)['queryHandler'](httpEvent)).toEqual('dec')
         expect(mockHandle).toHaveBeenCalledWith(
             { id: '1' },
@@ -92,13 +92,13 @@ describe('QueryHandler decorator', () => {
         )
     })
 
-    it('api gateway v2 event - should invoke query handler with empty body', async () => {
+    it('api gateway v2 change - should invoke query handler with empty body', async () => {
         httpEvent.queryStringParameters = undefined
         expect(await (TestQueryHandler.prototype as any)['queryHandler'](httpEvent)).toEqual('empty')
         expect(mockHandle).toHaveBeenCalledWith({ id: '1' }, {})
     })
 
-    it('api gateway v2 event - should invoke query handler with empty body', async () => {
+    it('api gateway v2 change - should invoke query handler with empty body', async () => {
         httpEvent.body = undefined
         expect(await (TestQueryBodyHandler.prototype as any)['queryHandler'](httpEvent)).toEqual('empty')
         expect(mockHandle).toHaveBeenCalledWith({ id: '1' }, {})

@@ -70,7 +70,7 @@ describe('CommandHandler decorator', () => {
         expect(TestHandler.prototype).toHaveProperty('commandHandler')
     })
 
-    it('api gateway v2 event - should invoke handler with valid body', async () => {
+    it('api gateway v2 change - should invoke handler with valid body', async () => {
         expect(await (TestHandler.prototype as any)['commandHandler'](httpEvent)).toEqual('dec test')
         expect(mockHandle).toHaveBeenCalledWith({
             firstName: 'dec',
@@ -78,13 +78,13 @@ describe('CommandHandler decorator', () => {
         })
     })
 
-    it('api gateway v2 event - should invoke handler with empty body', async () => {
+    it('api gateway v2 change - should invoke handler with empty body', async () => {
         httpEvent.body = undefined
         expect(await (TestHandler.prototype as any)['commandHandler'](httpEvent)).toEqual('empty')
         expect(mockHandle).toHaveBeenCalledWith({})
     })
 
-    it('should invoke handler async with sqs event containing a valid sns message', async () => {
+    it('should invoke handler async with sqs change containing a valid sns message', async () => {
         await (TestHandler.prototype as any)['commandHandler'](sqsEvent)
 
         expect(mockHandle).toHaveBeenCalledWith({

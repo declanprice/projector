@@ -4,19 +4,17 @@ import { Construct } from 'constructs'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
 import { Match, Rule } from 'aws-cdk-lib/aws-events'
 import { SqsQueue } from 'aws-cdk-lib/aws-events-targets'
-import { EventBus } from './event-bus'
-import { SubscriptionBus } from '../subscription/subscription-bus'
+import { ChangeBus } from './change-bus'
+import { SubscriptionBus } from '../subscription'
 import { AggregateStore } from '../aggregate'
-import { OutboxStore } from '../outbox'
 import { ProjectionStore } from '../projection'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { getChangeHandlerGroupTypes } from '../../event/change-handler.decorator'
 
 type ChangeHandlerProps = {
-    eventBus: EventBus
+    changeBus: ChangeBus
     aggregateStore?: AggregateStore
-    outboxStore?: OutboxStore
     projectionStores?: ProjectionStore[]
     subscriptionBus?: SubscriptionBus
 } & Partial<NodejsFunctionProps>
@@ -35,7 +33,7 @@ export class ChangeHandler extends NodejsFunction {
             ...props,
         })
 
-        const { eventBus, aggregateStore, outboxStore, projectionStores, subscriptionBus } = props
+        const { changeBus, aggregateStore, projectionStores, subscriptionBus } = props
 
         const handlerQueue = new Queue(this, `${handler.name}-Queue`, {
             queueName: `${handler.name}-Queue`,
@@ -49,7 +47,7 @@ export class ChangeHandler extends NodejsFunction {
 
         new Rule(this, `${handler.name}-Rule`, {
             ruleName: `${handler.name}-Rule`,
-            eventBus,
+            eventBus: changeBus,
             eventPattern: {
                 detailType: Match.exactString('CHANGE_EVENT'),
                 detail:
@@ -72,17 +70,10 @@ export class ChangeHandler extends NodejsFunction {
 
         if (subscriptionBus) {
             subscriptionBus.grantPublish(this)
-            this.addEnvironment('SUBSCRIPTION_BUS_ARN', subscriptionBus.topicArn)
         }
 
         if (aggregateStore) {
             aggregateStore.grantReadWriteData(this)
-            this.addEnvironment('AGGREGATE_STORE_NAME', aggregateStore.tableName)
-        }
-
-        if (outboxStore) {
-            outboxStore.grantWriteData(this)
-            this.addEnvironment('OUTBOX_STORE_NAME', outboxStore.tableName)
         }
 
         if (projectionStores) {

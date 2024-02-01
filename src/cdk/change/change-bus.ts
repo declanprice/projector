@@ -1,10 +1,10 @@
 import { EventBus as AWSEventBus, EventBusProps as AWSEventBusProps } from 'aws-cdk-lib/aws-events'
 import { Construct } from 'constructs'
 
-type EventBusProps = {} & Partial<AWSEventBusProps>
+type ChangeBusProps = {} & Partial<AWSEventBusProps>
 
-export class EventBus extends AWSEventBus {
-    constructor(scope: Construct, id: string, props?: EventBusProps) {
+export class ChangeBus extends AWSEventBus {
+    constructor(scope: Construct, id: string, props?: ChangeBusProps) {
         super(scope, id, {
             eventBusName: id,
             ...props,

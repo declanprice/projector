@@ -4,17 +4,17 @@ import { Runtime, StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { Duration } from 'aws-cdk-lib'
 import { AggregateStore } from './aggregate-store'
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
-import { EventBus } from '../event'
+import { ChangeBus } from '../change'
 import * as path from 'path'
 import * as fs from 'fs'
 
-type StateStorePublisherProps = {
-    eventBus: EventBus
+type AggregateStorePublisherProps = {
+    changeBus: ChangeBus
     aggregateStore: AggregateStore
 } & Partial<NodejsFunction>
 
 export class AggregateStorePublisher extends NodejsFunction {
-    constructor(scope: Construct, id: string, props: StateStorePublisherProps) {
+    constructor(scope: Construct, id: string, props: AggregateStorePublisherProps) {
         const isPackage = fs.existsSync(path.join(__dirname, './aggregate-store-publisher.handler.js'))
 
         super(scope, id, {
@@ -25,14 +25,14 @@ export class AggregateStorePublisher extends NodejsFunction {
             entry: path.join(__dirname, `./aggregate-store-publisher.handler.${isPackage ? 'js' : 'ts'}`),
             handler: 'aggregateStorePublisherHandler',
             environment: {
-                EVENT_BUS_NAME: props.eventBus.eventBusName,
+                CHANGE_BUS_NAME: props.changeBus.eventBusName,
             },
             ...props,
         })
 
-        const { aggregateStore, eventBus } = props
+        const { aggregateStore, changeBus } = props
 
-        eventBus.grantPutEventsTo(this)
+        changeBus.grantPutEventsTo(this)
 
         this.addEventSource(
             new DynamoEventSource(aggregateStore, { batchSize: 10, startingPosition: StartingPosition.LATEST })
