@@ -4,12 +4,12 @@ import { SchedulerStore } from './scheduler-store'
 import { Duration, Stack } from 'aws-cdk-lib'
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
-import { ChangeBus } from '../change'
+import { EventBus } from '../event'
 import { Effect, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import * as path from 'path'
 
 type SchedulerStorePublisherProps = {
-    changeBus: ChangeBus
+    eventBus: EventBus
     schedulerStore: SchedulerStore
 } & Partial<NodejsFunctionProps>
 
@@ -22,7 +22,7 @@ export class SchedulerStorePublisher extends NodejsFunction {
             entry: path.join(__dirname, './scheduler-publisher.handler.ts'),
             handler: 'schedulerPublisherHandler',
             environment: {
-                CHANGE_BUS_ARN: props.changeBus.eventBusArn,
+                EVENT_BUS_ARN: props.eventBus.eventBusArn,
             },
             initialPolicy: [
                 new PolicyStatement({
@@ -41,7 +41,7 @@ export class SchedulerStorePublisher extends NodejsFunction {
             ...props,
         })
 
-        const { schedulerStore, changeBus } = props
+        const { schedulerStore, eventBus } = props
 
         const schedulerRole = new Role(this, 'SchedulerRole', {
             assumedBy: new ServicePrincipal('scheduler.amazonaws.com'),
@@ -51,7 +51,7 @@ export class SchedulerStorePublisher extends NodejsFunction {
                     statements: [
                         new PolicyStatement({
                             effect: Effect.ALLOW,
-                            resources: [changeBus.eventBusArn],
+                            resources: [eventBus.eventBusArn],
                             actions: ['events:PutEvents'],
                         }),
                     ],
@@ -61,7 +61,7 @@ export class SchedulerStorePublisher extends NodejsFunction {
 
         this.addEnvironment('SCHEDULER_ROLE_ARN', schedulerRole.roleArn)
 
-        changeBus.grantPutEventsTo(this)
+        eventBus.grantPutEventsTo(this)
 
         schedulerStore.grantReadWriteData(this)
 

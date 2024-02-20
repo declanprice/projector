@@ -1,0 +1,23 @@
+---
+sidebar_position: 1
+---
+
+# Handler
+
+
+### Usage
+
+
+```tsx title="src/register-customer.handler.ts"
+import { CommandHandler } from '@declanprice/projector/command'
+
+@CommandHandler({
+    path: '/customers',
+})
+export class RegisterCustomerHandler implements HandleCommand {
+    async handle(command: CommandMessage<any>) {
+        // your command logic here.
+    }
+}
+```
+

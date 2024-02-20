@@ -1,0 +1,8 @@
+{
+  "label": "Query",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "learn how to create a query handler."
+  }
+}

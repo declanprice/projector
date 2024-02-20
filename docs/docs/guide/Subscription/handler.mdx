@@ -1,0 +1,32 @@
+---
+sidebar_position: 1
+---
+
+# Handler
+
+## Usage
+
+```tsx title="src/customer-subscription.handler.ts"
+import { HandleSubscription, SubscriptionHandler } from '@declanprice/projector/subscription'
+
+type CustomerUpdate = {
+    customerId: string
+    firstName: string
+    lastName: string
+}
+
+@SubscriptionHandler({
+    route: 'customer.updates',
+    lookupKey: 'customerId',
+})
+export class CustomerSubscriptionHandler implements HandleSubscription {
+    filter(update: CustomerUpdate, filter: CustomerUpdate) {
+        return true
+    }
+
+    async handle(update: CustomerUpdate) {
+        return update
+    }
+}
+```
+

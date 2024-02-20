@@ -1,0 +1,26 @@
+---
+sidebar_position: 2
+---
+
+# Cdk
+
+### Usage
+
+```tsx title="lib/event.stack.ts"
+import { Stack, StackProps } from 'aws-cdk-lib'
+import { Construct } from 'constructs'
+import { EventGroup } from '@declanprice/projector/cdk'
+import { CustomerChangeGroup } from '../src/customer-change-group.handler'
+
+export class EventStack extends Stack {
+    constructor(scope: Construct, id: string, props: EventStackProps) {
+        super(scope, id, props)
+
+        new EventGroup(this, CustomerEventGroup, {
+            eventBus: props.eventBus,
+            entry: 'src/customer-event-group.handler.ts',
+        })
+    }
+}
+```
+

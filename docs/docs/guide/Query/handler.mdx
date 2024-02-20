@@ -1,0 +1,18 @@
+---
+sidebar_position: 1
+---
+
+# Handler
+
+```tsx title="query-handlers.resources.ts"
+import { QueryHandler } from '@declanprice/projector/query'
+
+@QueryHandler({
+    path: '/customers/{id}',
+})
+export class GetCustomerByIdHandler implements HandleQuery {
+    async handle(query: QueryMessage<any>) {
+        // your query logic here.
+    }
+}
+```

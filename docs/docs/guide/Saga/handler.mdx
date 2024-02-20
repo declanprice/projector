@@ -1,0 +1,25 @@
+---
+sidebar_position: 1
+---
+
+# Handler
+
+## Usage
+
+How to start a saga.
+
+```tsx title="src/register-customer.handler.ts"
+import { CommandHandler } from '@declanprice/projector/command'
+import { Saga } from '@declanprice/projector/saga'
+
+@CommandHandler({
+    path: '/customers',
+})
+export class RegisterCustomerHandler implements HandleCommand {
+    readonly saga = new Saga('RegisterCustomerSaga')
+
+    async handle(command: CommandMessage<any>) {
+        await saga.startSync({ data: 'saga data'});
+    }
+}
+```

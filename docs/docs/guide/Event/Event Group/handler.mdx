@@ -1,0 +1,23 @@
+---
+sidebar_position: 1
+---
+
+# Handler
+
+## Usage
+
+```tsx title="src/customer-event-group.handler.ts"
+import { EventGroup, EventHandler, EventMessage } from '@declanprice/projector/event'
+
+@EventGroup({
+    batchSize: 10,
+})
+export class CustomerEventGroup {
+
+    @EventHandler('CustomerRegistered')
+    async onChange(change: EventMessage<Customer>) {
+        // handle customer registered event.
+    }
+}
+```
+

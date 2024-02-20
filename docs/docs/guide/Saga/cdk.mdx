@@ -1,0 +1,65 @@
+---
+sidebar_position: 2
+---
+
+# Cdk
+
+## Usage
+
+How to specify the saga steps.
+
+```tsx title="lib/command.stack.ts"
+import { Stack, StackProps } from 'aws-cdk-lib'
+import { Construct } from 'constructs'
+import { QueryHandler } from '@declanprice/projector/cdk'
+
+export class CommandStack extends Stack {
+    constructor(scope: Construct, id: string, props: CommandStackProps) {
+        super(scope, id, props)
+
+        const stepOne = new CommandHandler(this, StepOneHandler, {
+            entry: 'src/saga/success-steps.ts',
+        })
+
+        const stepTwo = new CommandHandler(this, StepTwoHandler, {
+            entry: 'src/saga/success-steps.ts',
+        })
+
+        const stepThree = new CommandHandler(this, StepThreeHandler, {
+            entry: 'src/saga/success-steps.ts',
+        })
+
+        const errorStepOne = new CommandHandler(this, ErrorStepOneHandler, {
+            entry: 'src/saga/error-steps.ts',
+        })
+
+        const errorStepTwo = new CommandHandler(this, ErrorStepTwoHandler, {
+            entry: 'src/saga/error-steps.ts',
+        })
+
+        const sagaDefinition = new SagaDefinition(this, 'SagaDefinition')
+
+        sagaDefinition.step('StepOne', {
+            invoke: stepOne,
+            compensate: errorStepOne,
+        })
+
+        sagaDefinition.step('StepTwo', {
+            invoke: stepTwo,
+            compensate: errorStepTwo,
+        })
+
+        sagaDefinition.step('StepThree', {
+            invoke: stepThree,
+        })
+
+        new Saga(this, 'SagaHandler', {
+            startBy: registerCustomer,
+            definitionBody: sagaDefinition.create(),
+        })
+    }
+}
+```
+
+
+

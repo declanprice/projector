@@ -1,0 +1,26 @@
+---
+sidebar_position: 2
+---
+
+# Cdk
+
+### Usage
+
+```tsx title="lib/query.stack.ts"
+import { Stack, StackProps } from 'aws-cdk-lib'
+import { Construct } from 'constructs'
+import { QueryHandler } from '@declanprice/projector/cdk'
+import { GetCustomerByIdHandler } from '../src/get-customer-by-id.handler'
+
+export class QueryStack extends Stack {
+    constructor(scope: Construct, id: string, props?: StackProps) {
+        super(scope, id, props)
+
+        new QueryHandler(this, GetCustomerByIdHandler, {
+                entry: 'src/get-customer-by-id.handler.ts',
+            })
+        }
+    }
+}
+```
+

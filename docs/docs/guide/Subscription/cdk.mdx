@@ -1,0 +1,26 @@
+---
+sidebar_position: 2
+---
+
+# Cdk
+
+### Usage
+
+```tsx title="lib/query.stack.ts"
+import { Stack, StackProps } from 'aws-cdk-lib'
+import { Construct } from 'constructs'
+import { QueryHandler } from '@declanprice/projector/cdk'
+import { CustomerSubscriptionHandler } from '../src/customer-subscription.handler'
+
+export class QueryStack extends Stack {
+    constructor(scope: Construct, id: string, props: QueryStackProps) {
+        super(scope, id, props)
+
+       new SubscriptionHandler(this, CustomerSubscriptionHandler, {
+            subscriptionStore: props.subscriptionStore,
+            subscriptionApi: props.subscriptionApi,
+            subscriptionBus: props.subscriptionBus,
+            entry: 'src/customer-subscription.handler.ts',
+        })
+    }
+}

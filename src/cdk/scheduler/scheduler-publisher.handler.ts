@@ -9,11 +9,11 @@ import {
 } from '@aws-sdk/client-scheduler'
 import { format } from 'date-fns'
 import { ResourceNotFoundException } from '@aws-sdk/client-scheduler'
-import { SchedulerMessage } from '../../scheduler/scheduler-message.type'
+import { EventMessage } from '../../event/event-message.type'
 
 const client = new SchedulerClient()
 
-const CHANGE_BUS_ARN = process.env.CHANGE_BUS_ARN as string
+const EVENT_BUS_ARN = process.env.EVENT_BUS_ARN as string
 const SCHEDULER_ROLE_ARN = process.env.SCHEDULER_ROLE_ARN as string
 
 export const schedulerPublisherHandler = async (event: DynamoDBStreamEvent) => {
@@ -27,8 +27,8 @@ export const schedulerPublisherHandler = async (event: DynamoDBStreamEvent) => {
             console.log(`[INSERT EVENT]`)
             const item = unmarshall(record.dynamodb.NewImage as any) as ScheduledItem
             const scheduledAt = format(item.scheduledAt, `yyyy-MM-dd'T'HH:mm:ss`)
-            const event: SchedulerMessage<any> = {
-                messageId: item.id,
+            const event: EventMessage<any> = {
+                id: item.id,
                 type: item.type,
                 data: item.data,
             }
@@ -38,10 +38,10 @@ export const schedulerPublisherHandler = async (event: DynamoDBStreamEvent) => {
                     GroupName: 'default',
                     ScheduleExpression: `at(${scheduledAt})`,
                     Target: {
-                        Arn: CHANGE_BUS_ARN,
+                        Arn: EVENT_BUS_ARN,
                         RoleArn: SCHEDULER_ROLE_ARN,
                         EventBridgeParameters: {
-                            DetailType: 'SCHEDULER_EVENT',
+                            DetailType: 'EVENT',
                             Source: 'SCHEDULER',
                         },
                         Input: JSON.stringify(event),

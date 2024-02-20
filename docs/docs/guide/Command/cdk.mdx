@@ -1,0 +1,26 @@
+---
+sidebar_position: 2
+---
+
+# Cdk
+
+### Usage
+
+```tsx title="lib/command.stack.ts"
+import { Stack, StackProps } from 'aws-cdk-lib'
+import { Construct } from 'constructs'
+import { CommandHandler } from '@declanprice/projector/cdk'
+import { RegisterCustomerHandler } from '../src/register-customer.handler'
+
+export class CommandStack extends Stack {
+    constructor(scope: Construct, id: string, props?: StackProps) {
+        super(scope, id, props)
+
+        new CommandHandler(this, RegisterCustomerHandler, {
+                entry: 'src/register-customer.handler.ts',
+            })
+        }
+    }
+}
+```
+

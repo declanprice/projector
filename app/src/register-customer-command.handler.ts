@@ -1,13 +1,16 @@
 import { object, Output, parse, string } from 'valibot'
 import { v4 } from 'uuid'
-import { transactWriteItems } from '@declanprice/dynostore'
 import { addMinutes } from 'date-fns'
 import { Customer } from './customer.aggregate'
-import { CommandMessage, CommandHandler, HandleCommand } from '../../src/command'
+import { CommandHandler, CommandMessage, HandleCommand } from '../../src/command'
 import { SchedulerStore } from '../../src/store/scheduler/scheduler.store'
 import { SubscriptionBus } from '../../src/subscription/subscription-bus'
 import { Saga } from '../../src/saga/saga'
 import { AggregateStore } from '../../src/store/aggregate/aggregate.store'
+import { transactWriteItems } from '../../src/store'
+import { OutboxStore } from '../../src/store/outbox/outbox.store'
+import { OutboxItem, OutboxItemStatus } from '../../src/store/outbox/outbox.item'
+import { ScheduledItem } from '../../src/store/scheduler/scheduled.item'
 
 const RegisterCustomerSchema = object({
     firstName: string(),
@@ -22,6 +25,7 @@ type RegisterCustomerCommand = CommandMessage<Output<typeof RegisterCustomerSche
 export class RegisterCustomerCommandHandler implements HandleCommand {
     readonly store = new AggregateStore('Aggregates')
     readonly scheduler = new SchedulerStore('Scheduler')
+    readonly outbox = new OutboxStore('OutboxStore')
     readonly subscriptionBus = new SubscriptionBus('SubscriptionBus')
     readonly saga = new Saga('SagaHandler')
 
@@ -43,9 +47,24 @@ export class RegisterCustomerCommandHandler implements HandleCommand {
             version: 0,
         }
 
+        const event: OutboxItem = {
+            id: v4(),
+            type: 'CustomerRegistered',
+            status: OutboxItemStatus.PENDING,
+            data: customer,
+        }
+
+        const scheduledEvent: ScheduledItem = {
+            id: scheduledTaskId,
+            type: 'CustomerRegistered',
+            scheduledAt: addMinutes(new Date(), 1).toISOString(),
+            data: customer,
+        }
+
         await transactWriteItems(
             this.store.put().item(customer).tx(),
-            this.scheduler.schedule(customerId, 'test-schedule', customer, addMinutes(new Date(), 1)).tx()
+            this.outbox.put().item(event).tx(),
+            this.scheduler.put().item(scheduledEvent).tx()
         )
     }
 }

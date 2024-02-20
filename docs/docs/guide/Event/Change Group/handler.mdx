@@ -1,0 +1,28 @@
+---
+sidebar_position: 1
+---
+
+# Handler
+
+## Usage
+
+```tsx title="src/customer-change-group.handler.ts"
+import { ChangeGroup, ChangeHandler, ChangeMessage } from '@declanprice/projector/event'
+
+@ChangeGroup({
+    batchSize: 10,
+})
+export class CustomerChangeGroup {
+
+    @ChangeHandler('Customer', [ChangeType.INSERT, ChangeType.MODIFY])
+    async onChange(change: ChangeMessage<Customer>) {
+        // handle customer updates here.
+    }
+
+    @ChangeHandler('Customer', ChangeType.REMOVE)
+    async onDelete(change: ChangeMessage<Customer>) {
+        // handle customer deletes here.
+    }
+}
+```
+

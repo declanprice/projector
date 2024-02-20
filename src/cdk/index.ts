@@ -3,7 +3,7 @@ export { SubscriptionApi } from './subscription/subscription-api'
 
 export * from './aggregate'
 export * from './command'
-export * from './change'
+export * from './event'
 export * from './projection'
 export * from './query'
 export * from './subscription'

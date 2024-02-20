@@ -1,2 +1,2 @@
-export { ChangeType, ChangeMessage } from './change-event.type'
-export { ChangeHandlerGroup, ChangeHandler } from './change-handler.decorator'
+export { ChangeType, ChangeMessage } from './change-message.type'
+export { ChangeGroup, ChangeHandler } from './change-group.decorator'

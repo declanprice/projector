@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import {
-    ChangeBus,
+    EventBus,
     AggregateStorePublisher,
     AggregateStore,
     HandlerApi,
@@ -13,7 +13,7 @@ import {
     SubscriptionStore,
     QueryHandler,
     ProjectionStore,
-    ChangeHandler,
+    ChangeGroup,
     SchedulerHandler,
     SubscriptionHandler,
 } from '../../src/cdk'
@@ -22,16 +22,17 @@ import { Saga } from '../../src/cdk/saga/saga'
 import { StepOneHandler, StepThreeHandler, StepTwoHandler } from '../src/saga/success-steps'
 import { ErrorStepOneHandler, ErrorStepTwoHandler } from '../src/saga/error-steps'
 import { GetCustomerByIdQueryHandler } from '../src/get-customer-by-id-query.handler'
-import { CustomerProjectionChangeHandler } from '../src/customer-projection-change.handler'
+import { CustomerChangeGroup } from '../src/customer-change.group'
 import { SagaDefinition } from '../../src/cdk/saga/saga-definition'
-import { TestSchedulerHandler } from '../src/test-scheduler.handler'
 import { CustomerSubscriptionHandler } from '../src/customer-subscription.handler'
+import { EventGroup } from '../../src/cdk/event/event-group'
+import { CustomerEventGroup } from '../src/customer-event-group.handler'
 
 export class AppStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props)
 
-        const changeBus = new ChangeBus(this, 'ChangeBus')
+        const eventBus = new EventBus(this, 'EventBus')
 
         const subscriptionBus = new SubscriptionBus(this, 'SubscriptionBus')
 
@@ -44,13 +45,13 @@ export class AppStack extends cdk.Stack {
 
         const aggregateStore = new AggregateStore(this, 'Aggregates')
         new AggregateStorePublisher(this, 'AggregatesPublisher', {
-            changeBus,
+            eventBus,
             aggregateStore,
         })
 
         const schedulerStore = new SchedulerStore(this, 'Scheduler')
         new SchedulerStorePublisher(this, 'SchedulerPublisher', {
-            changeBus,
+            eventBus,
             schedulerStore,
         })
 
@@ -70,15 +71,15 @@ export class AppStack extends cdk.Stack {
             entry: 'src/get-customer-by-id-query.handler.ts',
         })
 
-        new ChangeHandler(this, CustomerProjectionChangeHandler, {
-            changeBus,
+        new ChangeGroup(this, CustomerChangeGroup, {
+            eventBus,
             projectionStores: [projectionStore],
-            entry: 'src/customer-projection-change.handler.ts',
+            entry: 'src/customer-change-group.handler.ts',
         })
 
-        new SchedulerHandler(this, TestSchedulerHandler, {
-            changeBus,
-            entry: 'src/test-scheduler.handler.ts',
+        new EventGroup(this, CustomerEventGroup, {
+            eventBus,
+            entry: 'src/customer-event-group.handler.ts',
         })
 
         new SubscriptionHandler(this, CustomerSubscriptionHandler, {
