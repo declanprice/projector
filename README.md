@@ -1,6 +1,6 @@
 # Projector
 
-Projector aims to provide the building blocks required to develop fully features event driven cqrs state sourced applications.
+Projector aims to provide the building blocks required to develop fully featured event driven, state sourced, cqrs applications.
 
 <hr />
 
