@@ -18,7 +18,7 @@ export class OutboxStorePublisher extends NodejsFunction {
             functionName: id,
             timeout: Duration.seconds(10),
             memorySize: 512,
-            entry: path.join(__dirname, './outbox-publisher.handler.ts'),
+            entry: path.join(__dirname, './outbox-store-publisher.handler.ts'),
             handler: 'outboxPublisherHandler',
             environment: {
                 OUTBOX_STORE_NAME: props.outboxStore.tableName,

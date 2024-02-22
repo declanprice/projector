@@ -10,15 +10,15 @@ sidebar_position: 2
 import { Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import { ChangeGroup } from '@declanprice/projector/cdk'
-import { CustomerChangeGroup } from '../src/customer-change-group.handler'
+import { CustomerProjectionHandler } from '../src/customer-change-group.handler'
 
 export class EventStack extends Stack {
     constructor(scope: Construct, id: string, props: EventStackProps) {
         super(scope, id, props)
 
-        new ChangeGroup(this, CustomerChangeGroup, {
+        new ChangeGroup(this, CustomerProjectionHandler, {
             eventBus: props.eventBus,
-            entry: 'src/customer-change-group.handler.ts',
+            entry: 'src/customer-projection.handler.ts',
         })
     }
 }

@@ -11,10 +11,12 @@ import { ProjectionStore } from '../projection'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { getEventGroupTypes } from '../../event/event-group.decorator'
+import { OutboxStore } from '../outbox'
 
 type EventHandlerProps = {
     eventBus: EventBus
     aggregateStore?: AggregateStore
+    outboxStore?: OutboxStore
     projectionStores?: ProjectionStore[]
     subscriptionBus?: SubscriptionBus
 } & Partial<NodejsFunctionProps>
@@ -33,7 +35,7 @@ export class EventGroup extends NodejsFunction {
             ...props,
         })
 
-        const { eventBus, aggregateStore, projectionStores, subscriptionBus } = props
+        const { eventBus, aggregateStore, outboxStore, projectionStores, subscriptionBus } = props
 
         const handlerQueue = new Queue(this, `${handler.name}-Queue`, {
             queueName: `${handler.name}-Queue`,
@@ -68,6 +70,10 @@ export class EventGroup extends NodejsFunction {
 
         if (aggregateStore) {
             aggregateStore.grantReadWriteData(this)
+        }
+
+        if (outboxStore) {
+            outboxStore.grantReadWriteData(this)
         }
 
         if (projectionStores) {

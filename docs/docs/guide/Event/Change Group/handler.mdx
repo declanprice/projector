@@ -6,13 +6,13 @@ sidebar_position: 1
 
 ## Usage
 
-```tsx title="src/customer-change-group.handler.ts"
+```tsx title="src/customer-projection.handler.ts"
 import { ChangeGroup, ChangeHandler, ChangeMessage } from '@declanprice/projector/event'
 
 @ChangeGroup({
     batchSize: 10,
 })
-export class CustomerChangeGroup {
+export class CustomerProjectionHandler {
 
     @ChangeHandler('Customer', [ChangeType.INSERT, ChangeType.MODIFY])
     async onChange(change: ChangeMessage<Customer>) {

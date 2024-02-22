@@ -1,4 +1,4 @@
-import { CommandMessage, CommandHandler, HandleCommand } from '../../../src/command'
+import { CommandMessage, CommandHandler, HandleCommand } from '../../../../src/command'
 
 @CommandHandler({})
 export class ErrorStepOneHandler implements HandleCommand {

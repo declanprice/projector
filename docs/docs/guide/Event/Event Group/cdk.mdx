@@ -10,7 +10,7 @@ sidebar_position: 2
 import { Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import { EventGroup } from '@declanprice/projector/cdk'
-import { CustomerChangeGroup } from '../src/customer-change-group.handler'
+import { CustomerProjectionHandler } from '../src/customer-change-group.handler'
 
 export class EventStack extends Stack {
     constructor(scope: Construct, id: string, props: EventStackProps) {
@@ -18,7 +18,7 @@ export class EventStack extends Stack {
 
         new EventGroup(this, CustomerEventGroup, {
             eventBus: props.eventBus,
-            entry: 'src/customer-event-group.handler.ts',
+            entry: 'src/send-welcome-email-event.handler.ts',
         })
     }
 }

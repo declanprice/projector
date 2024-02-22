@@ -1,4 +1,4 @@
-import { HandleSubscription, SubscriptionHandler } from '../../src/subscription'
+import { HandleSubscription, SubscriptionHandler } from '../../../src/subscription'
 
 type CustomerUpdate = {
     customerId: string
